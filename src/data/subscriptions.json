@@ -1,0 +1,48 @@
+[
+  {
+    "id": "1737403980522",
+    "userId": "1737403642224",
+    "name": "Netflix",
+    "dueDate": "2025-01-31",
+    "amount": "11",
+    "description": "Manter conta ativa",
+    "createdAt": "2025-01-20T20:13:00.522Z",
+    "updatedAt": "2025-01-20T21:30:56.416Z"
+  },
+  {
+    "id": "1737404291738",
+    "userId": "1737403642224",
+    "name": "Apple",
+    "dueDate": "2025-01-31",
+    "amount": "9",
+    "description": "Conta da Apple",
+    "createdAt": "2025-01-20T20:18:11.738Z"
+  },
+  {
+    "id": "1737404371787",
+    "userId": "1737403642224",
+    "name": "Google One",
+    "dueDate": "2025-01-31",
+    "amount": "3",
+    "description": "",
+    "createdAt": "2025-01-20T20:19:31.787Z"
+  },
+  {
+    "id": "1737408959170",
+    "userId": "1737403642224",
+    "name": "Adobe Cloud",
+    "dueDate": "2025-01-31",
+    "amount": "60",
+    "description": "Falta pagamento - pendente",
+    "createdAt": "2025-01-20T21:35:59.170Z"
+  },
+  {
+    "id": "1737411652261",
+    "userId": "1737403642224",
+    "name": "HP Ink",
+    "dueDate": "2025-01-31",
+    "amount": "20",
+    "description": "Cartuchos e impressões na impressora HP",
+    "createdAt": "2025-01-20T22:20:52.261Z"
+  }
+]
