@@ -6,7 +6,7 @@
     <title>ContaPlus</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap">
     <style>
         :root {
             /* Tema claro (padrão) */
@@ -486,12 +486,15 @@
                             <input type="password" id="loginPassword" required>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">
-                            <i data-lucide="log-in"></i>
+                        <button type="submit">
+                            <i data-lucide="log-in" class="inline-icon"></i>
                             Entrar
                         </button>
+                        <button type="button" id="resendButton" class="btn-help">
+                            <i data-lucide="mail" class="inline-icon"></i>
+                            Reenviar Email de Confirmação
+                        </button>
                     </form>
-                    <button id="resendButton" class="btn btn-link">Reenviar email de confirmação</button>
                     <p>Não tem uma conta? <a href="#" id="showRegister">Criar conta</a></p>
                 </div>
                 
@@ -508,7 +511,7 @@
                             <input type="password" id="registerPassword" required minlength="6">
                         </div>
 
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit">
                             <i data-lucide="user-plus"></i>
                             Registrar
                         </button>
@@ -674,63 +677,19 @@
     </div>
 
     <script>
-        // Sistema de mensagens
+        // Inicializar ícones Lucide
+        lucide.createIcons();
+
+        // Função para mostrar mensagens
         function showMessage(message, type = 'success') {
             const messageAlert = document.getElementById('messageAlert');
             messageAlert.textContent = message;
             messageAlert.className = `alert alert-${type}`;
             messageAlert.style.display = 'block';
             
-            // Esconder mensagem após 5 segundos
             setTimeout(() => {
                 messageAlert.style.display = 'none';
             }, 5000);
-        }
-
-        // Inicializar Supabase
-        const SUPABASE_URL = 'https://rlatlpcnpgcegvjeebxe.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                storage: window.localStorage
-            }
-        });
-
-        // Elementos da interface
-        const authContainer = document.getElementById('authForms');
-        const mainContent = document.getElementById('mainContent');
-        const registerForm = document.getElementById('registerForm');
-        const loginForm = document.getElementById('loginForm');
-        const resendButton = document.getElementById('resendButton');
-
-        // Funções de navegação
-        function showAuthForms() {
-            authContainer.style.display = 'block';
-            mainContent.style.display = 'none';
-            showLoginForm(); // Mostrar login por padrão
-        }
-
-        function showMainContent() {
-            authContainer.style.display = 'none';
-            mainContent.style.display = 'block';
-        }
-
-        function showLoginForm() {
-            document.querySelector('.auth-form:first-child').style.display = 'block';
-            document.querySelector('.auth-form:last-child').style.display = 'none';
-            if (resendButton) {
-                resendButton.style.display = 'block';
-            }
-        }
-
-        function showRegisterForm() {
-            document.querySelector('.auth-form:first-child').style.display = 'none';
-            document.querySelector('.auth-form:last-child').style.display = 'block';
-            if (resendButton) {
-                resendButton.style.display = 'none';
-            }
         }
 
         // Verificar se o usuário está logado
@@ -749,134 +708,6 @@
             }
         }
 
-        // Registro de usuário
-        if (registerForm) {
-            registerForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
-
-                try {
-                    const { data, error } = await supabaseClient.auth.signUp({
-                        email,
-                        password,
-                        options: {
-                            emailRedirectTo: window.location.origin
-                        }
-                    });
-
-                    if (error) throw error;
-
-                    if (data?.user?.identities?.length === 0) {
-                        showMessage('Este email já está registrado. Por favor, faça login.', 'error');
-                        showLoginForm();
-                        return;
-                    }
-
-                    showMessage('Registro realizado com sucesso! Verifique seu email para confirmar sua conta.', 'success');
-                    showLoginForm();
-                } catch (error) {
-                    console.error('Erro no registro:', error);
-                    if (error.message.includes('password')) {
-                        showMessage('A senha deve ter pelo menos 6 caracteres', 'error');
-                    } else if (error.message.includes('email')) {
-                        showMessage('Email inválido', 'error');
-                    } else if (error.message.includes('security purposes')) {
-                        showMessage('Por favor, aguarde um momento antes de tentar novamente', 'error');
-                    } else {
-                        showMessage(error.message, 'error');
-                    }
-                }
-            });
-        }
-
-        // Login de usuário
-        if (loginForm) {
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
-
-                try {
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({
-                        email,
-                        password
-                    });
-
-                    if (error) {
-                        if (error.message.includes('Invalid login credentials')) {
-                            showMessage('Email ou senha incorretos', 'error');
-                        } else {
-                            throw error;
-                        }
-                        return;
-                    }
-
-                    if (!data.user.email_confirmed_at) {
-                        showMessage('Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada.', 'error');
-                        return;
-                    }
-
-                    showMainContent();
-                    await loadSubscriptions();
-                    showMessage('Login realizado com sucesso!', 'success');
-                } catch (error) {
-                    console.error('Erro no login:', error);
-                    if (error.message.includes('network')) {
-                        showMessage('Erro de conexão. Verifique sua internet.', 'error');
-                    } else {
-                        showMessage(error.message, 'error');
-                    }
-                }
-            });
-        }
-
-        // Botões de navegação
-        const showRegisterButton = document.getElementById('showRegister');
-        const showLoginButton = document.getElementById('showLogin');
-
-        if (showRegisterButton) {
-            showRegisterButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                showRegisterForm();
-            });
-        }
-
-        if (showLoginButton) {
-            showLoginButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                showLoginForm();
-            });
-        }
-
-        // Reenviar email de confirmação
-        if (resendButton) {
-            resendButton.addEventListener('click', async () => {
-                const email = document.getElementById('loginEmail').value;
-                if (!email) {
-                    showMessage('Digite seu email para reenviar a confirmação', 'error');
-                    return;
-                }
-
-                try {
-                    const { error } = await supabaseClient.auth.resend({
-                        type: 'signup',
-                        email: email
-                    });
-
-                    if (error) throw error;
-                    showMessage('Email de confirmação reenviado! Verifique sua caixa de entrada.', 'success');
-                } catch (error) {
-                    console.error('Erro ao reenviar email:', error);
-                    if (error.message.includes('security purposes')) {
-                        showMessage('Por favor, aguarde um momento antes de tentar novamente', 'error');
-                    } else {
-                        showMessage(error.message, 'error');
-                    }
-                }
-            });
-        }
-
         // Inicializar a aplicação
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
@@ -884,6 +715,139 @@
                 initTheme();
             }
         });
+
+        // Inicializar Supabase
+        const SUPABASE_URL = 'https://rlatlpcnpgcegvjeebxe.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                storage: window.localStorage
+            }
+        });
+
+        // Verificar parâmetros de URL para erros
+        function checkUrlErrors() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const error = urlParams.get('error');
+
+            if (error === 'access_denied' && urlParams.get('error_code') === 'otp_expired') {
+                showMessage('O link de confirmação expirou. Por favor, solicite um novo email de confirmação.', 'error');
+                showLoginForm();
+                return true;
+            }
+            return false;
+        }
+
+        // Chamada inicial para verificar erros
+        checkUrlErrors();
+
+        // Registro de usuário
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: window.location.origin,
+                        data: {
+                            email_confirm_sent_at: new Date().toISOString()
+                        }
+                    }
+                });
+
+                if (error) throw error;
+
+                if (data?.user?.identities?.length === 0) {
+                    showMessage('Este email já está registrado. Por favor, faça login.', 'error');
+                    showLoginForm();
+                    return;
+                }
+
+                showMessage('Registro realizado com sucesso! Verifique seu email para confirmar sua conta. O link expira em 1 hora.', 'success');
+                showLoginForm();
+            } catch (error) {
+                console.error('Erro no registro:', error);
+                if (error.message.includes('password')) {
+                    showMessage('A senha deve ter pelo menos 6 caracteres', 'error');
+                } else {
+                    showMessage('Erro ao registrar usuário. Por favor, tente novamente.', 'error');
+                }
+            }
+        });
+
+        // Login de usuário
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+
+                showMessage('Login realizado com sucesso!', 'success');
+                showMainContent();
+                loadSubscriptions();
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showMessage('Email ou senha incorretos', 'error');
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) throw error;
+                showMessage('Logout realizado com sucesso!', 'success');
+                showAuthForms();
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                showMessage('Erro ao fazer logout', 'error');
+            }
+        });
+
+        // Reenviar email de confirmação
+        async function resendConfirmationEmail(email) {
+            try {
+                const { error } = await supabaseClient.auth.resend({
+                    type: 'signup',
+                    email,
+                    options: {
+                        emailRedirectTo: window.location.origin
+                    }
+                });
+
+                if (error) throw error;
+                showMessage('Um novo email de confirmação foi enviado. Por favor, verifique sua caixa de entrada.', 'success');
+            } catch (error) {
+                console.error('Erro ao reenviar email:', error);
+                showMessage('Erro ao reenviar email de confirmação. Por favor, tente novamente.', 'error');
+            }
+        }
+
+        // Adicionar evento ao botão de reenvio
+        const resendButton = document.getElementById('resendButton');
+        if (resendButton) {
+            resendButton.addEventListener('click', async () => {
+                const email = document.getElementById('loginEmail').value;
+                if (!email) {
+                    showMessage('Digite seu email para reenviar a confirmação', 'error');
+                    return;
+                }
+                await resendConfirmationEmail(email);
+            });
+        }
     </script>
 </body>
 </html>
