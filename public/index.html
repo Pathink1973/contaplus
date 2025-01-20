@@ -716,7 +716,8 @@
                 const token = await getAuthToken();
                 const response = await fetch('/.netlify/functions/subscriptions', {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'apikey': SUPABASE_KEY
                     }
                 });
                 if (!response.ok) {
@@ -803,7 +804,8 @@
 
             fetch('/.netlify/functions/subscriptions', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'apikey': SUPABASE_KEY
                 }
             })
             .then(response => {
@@ -900,6 +902,7 @@
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
+                        'apikey': SUPABASE_KEY,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
@@ -952,6 +955,7 @@
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
+                        'apikey': SUPABASE_KEY,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
@@ -976,7 +980,8 @@
                     const response = await fetch(`/.netlify/functions/subscriptions/${id}`, {
                         method: 'DELETE',
                         headers: {
-                            'Authorization': `Bearer ${token}`
+                            'Authorization': `Bearer ${token}`,
+                            'apikey': SUPABASE_KEY
                         }
                     });
 
