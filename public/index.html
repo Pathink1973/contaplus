@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ContaPlus</title>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap">
     <style>
         :root {
@@ -695,25 +696,33 @@
     </div>
 
     <script>
+        // Inicializar Supabase
+        const supabase = supabase.createClient(
+            'https://rlatlpcnpgcegvjeebxe.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag'
+        );
+
         // Inicializar ícones Lucide
         lucide.createIcons();
 
-        // Função para mostrar mensagens
-        function showMessage(message, type = 'success') {
-            const messageAlert = document.getElementById('messageAlert');
-            messageAlert.textContent = message;
-            messageAlert.className = `alert alert-${type}`;
-            messageAlert.style.display = 'block';
-            
-            setTimeout(() => {
-                messageAlert.style.display = 'none';
-            }, 5000);
+        // Função para obter o token de autenticação
+        async function getAuthToken() {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            return session?.access_token;
         }
 
         // Carregar inscrições
         async function loadSubscriptions() {
             try {
-                const response = await fetch('/.netlify/functions/subscriptions');
+                const token = await getAuthToken();
+                const response = await fetch('/.netlify/functions/subscriptions', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar inscrições');
+                }
                 const subscriptions = await response.json();
                 const list = document.getElementById('subscriptionsList');
                 
@@ -787,16 +796,26 @@
 
         // Verificar se o usuário está logado
         async function checkAuth() {
-            fetch('/.netlify/functions/subscriptions')
-                .then(response => {
-                    if (response.ok) {
-                        showMainContent();
-                        loadSubscriptions();
-                    } else {
-                        showAuthForms();
-                    }
-                })
-                .catch(() => showAuthForms());
+            const token = await getAuthToken();
+            if (!token) {
+                showAuthForms();
+                return;
+            }
+
+            fetch('/.netlify/functions/subscriptions', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showMainContent();
+                    loadSubscriptions();
+                } else {
+                    showAuthForms();
+                }
+            })
+            .catch(() => showAuthForms());
         }
 
         function showAuthForms() {
@@ -812,73 +831,56 @@
         // Registro de usuário
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const formData = {
-                email: document.getElementById('registerEmail').value,
-                password: document.getElementById('registerPassword').value
-            };
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
 
             try {
-                const response = await fetch('/.netlify/functions/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password
                 });
 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showMessage('Cadastro realizado com sucesso! Faça login para continuar.', 'success');
-                    e.target.reset();
-                } else {
-                    showMessage(data.error || 'Erro ao cadastrar', 'error');
-                }
+                if (error) throw error;
+
+                showMessage('Registro realizado com sucesso! Verifique seu email.', 'success');
+                showLoginForm();
             } catch (error) {
-                showMessage('Erro ao cadastrar', 'error');
+                showMessage(error.message, 'error');
             }
         });
 
         // Login de usuário
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const formData = {
-                email: document.getElementById('loginEmail').value,
-                password: document.getElementById('loginPassword').value
-            };
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
             try {
-                const response = await fetch('/.netlify/functions/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
                 });
 
-                if (response.ok) {
-                    showMessage('Login realizado com sucesso!', 'success');
-                    showMainContent();
-                    loadSubscriptions();
-                    e.target.reset();
-                } else {
-                    showMessage('Credenciais inválidas', 'error');
-                }
+                if (error) throw error;
+
+                showMainContent();
+                loadSubscriptions();
+                showMessage('Login realizado com sucesso!', 'success');
             } catch (error) {
-                showMessage('Erro ao fazer login', 'error');
+                showMessage(error.message, 'error');
             }
         });
 
         // Logout
         document.getElementById('logoutButton').addEventListener('click', async () => {
             try {
-                await fetch('/.netlify/functions/logout', { method: 'POST' });
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
                 showAuthForms();
                 showMessage('Logout realizado com sucesso!', 'success');
             } catch (error) {
-                showMessage('Erro ao fazer logout', 'error');
+                showMessage(error.message, 'error');
             }
         });
 
@@ -894,9 +896,11 @@
             };
 
             try {
+                const token = await getAuthToken();
                 const response = await fetch('/.netlify/functions/subscriptions', {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
@@ -944,9 +948,11 @@
             };
 
             try {
+                const token = await getAuthToken();
                 const response = await fetch(`/.netlify/functions/subscriptions/${id}`, {
                     method: 'PUT',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
@@ -967,8 +973,12 @@
         async function deleteSubscription(id) {
             if (confirm('Tem certeza que deseja excluir esta conta?')) {
                 try {
+                    const token = await getAuthToken();
                     const response = await fetch(`/.netlify/functions/subscriptions/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
                     });
 
                     if (response.ok) {
@@ -1039,6 +1049,18 @@
             if (event.target === helpModal) {
                 closeHelpModal();
             }
+        }
+
+        // Função para mostrar mensagens
+        function showMessage(message, type = 'success') {
+            const messageAlert = document.getElementById('messageAlert');
+            messageAlert.textContent = message;
+            messageAlert.className = `alert alert-${type}`;
+            messageAlert.style.display = 'block';
+            
+            setTimeout(() => {
+                messageAlert.style.display = 'none';
+            }, 5000);
         }
     </script>
 </body>
