@@ -521,6 +521,7 @@
                             Entrar
                         </button>
                     </form>
+                    <button id="resendButton" class="btn btn-link">Reenviar email de confirmação</button>
                 </div>
                 
                 <div class="auth-form">
@@ -869,16 +870,31 @@
             try {
                 const { data, error } = await supabaseClient.auth.signUp({
                     email,
-                    password
+                    password,
+                    options: {
+                        emailRedirectTo: window.location.origin
+                    }
                 });
 
                 if (error) throw error;
 
-                showMessage('Registro realizado com sucesso! Verifique seu email.', 'success');
+                if (data?.user?.identities?.length === 0) {
+                    showMessage('Este email já está registrado. Por favor, faça login.', 'error');
+                    showLoginForm();
+                    return;
+                }
+
+                showMessage('Registro realizado com sucesso! Verifique seu email para confirmar sua conta.', 'success');
                 showLoginForm();
             } catch (error) {
                 console.error('Erro no registro:', error);
-                showMessage(error.message, 'error');
+                if (error.message.includes('password')) {
+                    showMessage('A senha deve ter pelo menos 6 caracteres', 'error');
+                } else if (error.message.includes('email')) {
+                    showMessage('Email inválido', 'error');
+                } else {
+                    showMessage(error.message, 'error');
+                }
             }
         });
 
@@ -889,19 +905,42 @@
             const password = document.getElementById('loginPassword').value;
 
             try {
+                // Primeiro, verificar se o email foi confirmado
+                const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+                
+                if (userError && !userError.message.includes('not authenticated')) {
+                    throw userError;
+                }
+
+                if (user?.email_confirmed_at === null) {
+                    showMessage('Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada.', 'error');
+                    return;
+                }
+
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email,
                     password
                 });
 
-                if (error) throw error;
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        showMessage('Email ou senha incorretos', 'error');
+                    } else {
+                        throw error;
+                    }
+                    return;
+                }
 
                 showMainContent();
                 await loadSubscriptions();
                 showMessage('Login realizado com sucesso!', 'success');
             } catch (error) {
                 console.error('Erro no login:', error);
-                showMessage(error.message, 'error');
+                if (error.message.includes('network')) {
+                    showMessage('Erro de conexão. Verifique sua internet.', 'error');
+                } else {
+                    showMessage(error.message, 'error');
+                }
             }
         });
 
@@ -1087,6 +1126,28 @@
                 messageAlert.style.display = 'none';
             }, 5000);
         }
+
+        // Reenviar email de confirmação
+        document.getElementById('resendButton').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            if (!email) {
+                showMessage('Digite seu email para reenviar a confirmação', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.auth.resend({
+                    type: 'signup',
+                    email: email
+                });
+
+                if (error) throw error;
+                showMessage('Email de confirmação reenviado! Verifique sua caixa de entrada.', 'success');
+            } catch (error) {
+                console.error('Erro ao reenviar email:', error);
+                showMessage(error.message, 'error');
+            }
+        });
     </script>
 </body>
 </html>
