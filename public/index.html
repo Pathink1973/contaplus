@@ -442,6 +442,27 @@
             opacity: 0.8;
         }
 
+        .auth-switch {
+            margin-top: 1rem;
+            text-align: center;
+            color: var(--secondary-text);
+        }
+
+        .link-button {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .link-button:hover {
+            opacity: 0.8;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -470,8 +491,8 @@
             <h1>ContaPlus</h1>
         </div>
 
-        <div id="authForms" style="display: none;">
-            <div id="messageAlert" class="alert" style="display: none;"></div>
+        <div id="authForms">
+            <div id="messageAlert" class="alert"></div>
             <div class="auth-container">
                 <div class="auth-form">
                     <h2>Login</h2>
@@ -480,12 +501,10 @@
                             <label for="loginEmail">Email</label>
                             <input type="email" id="loginEmail" required>
                         </div>
-                        
                         <div class="form-group">
                             <label for="loginPassword">Senha</label>
                             <input type="password" id="loginPassword" required>
                         </div>
-
                         <button type="submit">
                             <i data-lucide="log-in" class="inline-icon"></i>
                             Entrar
@@ -495,7 +514,7 @@
                             Reenviar Email de Confirmação
                         </button>
                     </form>
-                    <p>Não tem uma conta? <a href="#" id="showRegister">Criar conta</a></p>
+                    <p class="auth-switch">Não tem uma conta? <button onclick="showRegisterForm()" class="link-button">Criar conta</button></p>
                 </div>
                 
                 <div class="auth-form" style="display: none;">
@@ -505,18 +524,16 @@
                             <label for="registerEmail">Email</label>
                             <input type="email" id="registerEmail" required>
                         </div>
-                        
                         <div class="form-group">
                             <label for="registerPassword">Senha</label>
                             <input type="password" id="registerPassword" required minlength="6">
                         </div>
-
                         <button type="submit">
-                            <i data-lucide="user-plus"></i>
+                            <i data-lucide="user-plus" class="inline-icon"></i>
                             Registrar
                         </button>
                     </form>
-                    <p>Já tem uma conta? <a href="#" id="showLogin">Fazer login</a></p>
+                    <p class="auth-switch">Já tem uma conta? <button onclick="showLoginForm()" class="link-button">Fazer login</button></p>
                 </div>
             </div>
         </div>
@@ -847,6 +864,17 @@
                 }
                 await resendConfirmationEmail(email);
             });
+        }
+
+        // Funções para alternar entre login e registro
+        function showLoginForm() {
+            document.querySelector('.auth-form:first-child').style.display = 'block';
+            document.querySelector('.auth-form:last-child').style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            document.querySelector('.auth-form:first-child').style.display = 'none';
+            document.querySelector('.auth-form:last-child').style.display = 'block';
         }
     </script>
 </body>
