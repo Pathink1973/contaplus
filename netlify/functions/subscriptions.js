@@ -3,7 +3,12 @@ const { createClient } = require('@supabase/supabase-js')
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rlatlpcnpgcegvjeebxe.supabase.co'
 const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag'
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
 
 exports.handler = async (event, context) => {
   // Habilitar CORS
@@ -28,18 +33,27 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: 'Não autorizado' })
+        body: JSON.stringify({ error: 'Token não fornecido' })
       }
     }
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
-    if (authError || !user) {
+    if (authError) {
+      console.error('Erro de autenticação:', authError)
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: 'Token inválido' })
+        body: JSON.stringify({ error: 'Token inválido', details: authError.message })
+      }
+    }
+
+    if (!user) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Usuário não encontrado' })
       }
     }
 
@@ -51,7 +65,10 @@ exports.handler = async (event, context) => {
           .eq('user_id', user.id)
           .order('renewal_date', { ascending: true })
 
-        if (error) throw error
+        if (error) {
+          console.error('Erro ao buscar assinaturas:', error)
+          throw error
+        }
 
         return {
           statusCode: 200,
@@ -72,7 +89,10 @@ exports.handler = async (event, context) => {
           }])
           .select()
 
-        if (createError) throw createError
+        if (createError) {
+          console.error('Erro ao criar assinatura:', createError)
+          throw createError
+        }
 
         return {
           statusCode: 201,
@@ -96,7 +116,10 @@ exports.handler = async (event, context) => {
           .eq('user_id', user.id)
           .select()
 
-        if (updateError) throw updateError
+        if (updateError) {
+          console.error('Erro ao atualizar assinatura:', updateError)
+          throw updateError
+        }
 
         return {
           statusCode: 200,
@@ -112,7 +135,10 @@ exports.handler = async (event, context) => {
           .eq('id', deleteId)
           .eq('user_id', user.id)
 
-        if (deleteError) throw deleteError
+        if (deleteError) {
+          console.error('Erro ao deletar assinatura:', deleteError)
+          throw deleteError
+        }
 
         return {
           statusCode: 204,
@@ -127,11 +153,15 @@ exports.handler = async (event, context) => {
         }
     }
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Erro na função:', error)
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        error: 'Erro interno do servidor',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      })
     }
   }
 }

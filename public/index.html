@@ -569,8 +569,8 @@
                 <h2>Nova Conta</h2>
                 <form id="subscriptionForm">
                     <div class="form-group">
-                        <label for="subscriptionName">Nome do Serviço</label>
-                        <input type="text" id="subscriptionName" required>
+                        <label for="serviceName">Nome do Serviço</label>
+                        <input type="text" id="serviceName" required>
                     </div>
                     
                     <div class="form-group">
@@ -579,13 +579,18 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="dueDate">Data de Vencimento</label>
-                        <input type="date" id="dueDate" required>
+                        <label for="renewalDate">Data de Vencimento</label>
+                        <input type="date" id="renewalDate" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="description">Descrição (opcional)</label>
-                        <textarea id="description" rows="3"></textarea>
+                        <label for="frequency">Frequência</label>
+                        <select id="frequency" required>
+                            <option value="mensal">Mensal</option>
+                            <option value="trimestral">Trimestral</option>
+                            <option value="semestral">Semestral</option>
+                            <option value="anual">Anual</option>
+                        </select>
                     </div>
 
                     <button type="submit">
@@ -632,13 +637,18 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="editDueDate">Data de Vencimento</label>
-                        <input type="date" id="editDueDate" required>
+                        <label for="editRenewalDate">Data de Vencimento</label>
+                        <input type="date" id="editRenewalDate" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="editDescription">Descrição (opcional)</label>
-                        <textarea id="editDescription" rows="3"></textarea>
+                        <label for="editFrequency">Frequência</label>
+                        <select id="editFrequency" required>
+                            <option value="mensal">Mensal</option>
+                            <option value="trimestral">Trimestral</option>
+                            <option value="semestral">Semestral</option>
+                            <option value="anual">Anual</option>
+                        </select>
                     </div>
 
                     <button type="submit">
@@ -663,7 +673,7 @@
                         <li>Nome do serviço ou conta</li>
                         <li>Valor em euros</li>
                         <li>Data de vencimento</li>
-                        <li>Descrição (opcional)</li>
+                        <li>Frequência (mensal, trimestral, semestral ou anual)</li>
                     </ul>
 
                     <h4>Gerenciar Contas</h4>
@@ -706,28 +716,58 @@
 
         // Função para obter o token de autenticação
         async function getAuthToken() {
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
-            return session?.access_token;
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                if (error) throw error;
+                return session?.access_token;
+            } catch (error) {
+                console.error('Erro ao obter token:', error);
+                return null;
+            }
+        }
+
+        // Função para fazer requisições autenticadas
+        async function fetchWithAuth(url, options = {}) {
+            try {
+                const token = await getAuthToken();
+                if (!token) {
+                    throw new Error('Usuário não autenticado');
+                }
+
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...options.headers,
+                        'Authorization': `Bearer ${token}`,
+                        'apikey': SUPABASE_KEY
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Erro na requisição');
+                }
+
+                return response;
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                throw error;
+            }
         }
 
         // Carregar inscrições
         async function loadSubscriptions() {
             try {
-                const token = await getAuthToken();
-                const response = await fetch('/.netlify/functions/subscriptions', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'apikey': SUPABASE_KEY
-                    }
-                });
-                if (!response.ok) {
-                    throw new Error('Erro ao carregar inscrições');
-                }
+                const response = await fetchWithAuth('/.netlify/functions/subscriptions');
                 const subscriptions = await response.json();
                 const list = document.getElementById('subscriptionsList');
                 
+                if (!Array.isArray(subscriptions)) {
+                    throw new Error('Formato de resposta inválido');
+                }
+
                 list.innerHTML = subscriptions.map(sub => {
-                    const dueDate = new Date(sub.dueDate);
+                    const dueDate = new Date(sub.renewal_date);
                     const today = new Date();
                     const diffTime = dueDate.getTime() - today.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -738,7 +778,7 @@
                         <div class="subscription-header">
                             <div class="subscription-title">
                                 <i data-lucide="credit-card" class="inline-icon"></i>
-                                <h3>${sub.name}</h3>
+                                <h3>${sub.service_name}</h3>
                                 ${isDueSoon ? `
                                     <div class="due-badge">
                                         <i data-lucide="alert-circle"></i>
@@ -747,7 +787,7 @@
                                 ` : ''}
                             </div>
                             <div class="subscription-actions">
-                                <button class="btn-icon" onclick="editSubscription('${sub.id}', '${sub.name}', '${sub.amount}', '${sub.dueDate}', '${sub.description || ''}')">
+                                <button class="btn-icon" onclick="editSubscription('${sub.id}', '${sub.service_name}', '${sub.amount}', '${sub.renewal_date}')">
                                     <i data-lucide="edit-2"></i>
                                 </button>
                                 <button class="btn-icon delete" onclick="deleteSubscription('${sub.id}')">
@@ -763,24 +803,18 @@
                             <div class="info-item">
                                 <div class="due-date ${isDueSoon ? 'soon' : ''}">
                                     <i data-lucide="calendar" class="inline-icon"></i>
-                                    <span>${new Date(sub.dueDate).toLocaleDateString()}</span>
+                                    <span>${new Date(sub.renewal_date).toLocaleDateString()}</span>
                                 </div>
-                            </div>
-                            <div class="info-item">
-                                <i data-lucide="file-text" class="inline-icon"></i>
-                                <span>${sub.description || 'Sem descrição'}</span>
                             </div>
                         </div>
                     </div>
                 `}).join('');
 
-                // Atualizar resumo
                 updateSummary(subscriptions);
-                
-                // Recriar ícones após adicionar novo conteúdo
                 lucide.createIcons();
             } catch (error) {
                 console.error('Erro ao carregar inscrições:', error);
+                showMessage(error.message, 'error');
             }
         }
 
@@ -796,27 +830,24 @@
 
         // Verificar se o usuário está logado
         async function checkAuth() {
-            const token = await getAuthToken();
-            if (!token) {
-                showAuthForms();
-                return;
-            }
-
-            fetch('/.netlify/functions/subscriptions', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'apikey': SUPABASE_KEY
+            try {
+                const token = await getAuthToken();
+                if (!token) {
+                    showAuthForms();
+                    return;
                 }
-            })
-            .then(response => {
+
+                const response = await fetchWithAuth('/.netlify/functions/subscriptions');
                 if (response.ok) {
                     showMainContent();
-                    loadSubscriptions();
+                    await loadSubscriptions();
                 } else {
                     showAuthForms();
                 }
-            })
-            .catch(() => showAuthForms());
+            } catch (error) {
+                console.error('Erro na verificação de autenticação:', error);
+                showAuthForms();
+            }
         }
 
         function showAuthForms() {
@@ -846,6 +877,7 @@
                 showMessage('Registro realizado com sucesso! Verifique seu email.', 'success');
                 showLoginForm();
             } catch (error) {
+                console.error('Erro no registro:', error);
                 showMessage(error.message, 'error');
             }
         });
@@ -865,9 +897,10 @@
                 if (error) throw error;
 
                 showMainContent();
-                loadSubscriptions();
+                await loadSubscriptions();
                 showMessage('Login realizado com sucesso!', 'success');
             } catch (error) {
+                console.error('Erro no login:', error);
                 showMessage(error.message, 'error');
             }
         });
@@ -881,42 +914,37 @@
                 showAuthForms();
                 showMessage('Logout realizado com sucesso!', 'success');
             } catch (error) {
+                console.error('Erro no logout:', error);
                 showMessage(error.message, 'error');
             }
         });
 
-        // Configurar o formulário de inscrição
+        // Adicionar nova assinatura
         document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const formData = {
-                name: document.getElementById('subscriptionName').value,
-                dueDate: document.getElementById('dueDate').value,
-                amount: document.getElementById('amount').value,
-                description: document.getElementById('description').value
+                service_name: document.getElementById('serviceName').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                renewal_date: document.getElementById('renewalDate').value,
+                frequency: document.getElementById('frequency').value
             };
 
             try {
-                const token = await getAuthToken();
-                const response = await fetch('/.netlify/functions/subscriptions', {
+                const response = await fetchWithAuth('/.netlify/functions/subscriptions', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'apikey': SUPABASE_KEY,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
                 });
 
-                if (response.ok) {
-                    showMessage('Conta adicionada com sucesso!', 'success');
-                    e.target.reset();
-                    loadSubscriptions();
-                } else {
-                    showMessage('Erro ao adicionar conta', 'error');
-                }
+                const data = await response.json();
+                showMessage('Assinatura adicionada com sucesso!', 'success');
+                e.target.reset();
+                await loadSubscriptions();
             } catch (error) {
-                showMessage('Erro ao adicionar conta', 'error');
+                console.error('Erro ao adicionar assinatura:', error);
+                showMessage(error.message, 'error');
             }
         });
 
@@ -929,12 +957,11 @@
             document.getElementById('editModal').style.display = 'none';
         }
 
-        async function editSubscription(id, name, amount, dueDate, description) {
+        async function editSubscription(id, name, amount, renewalDate) {
             document.getElementById('editId').value = id;
             document.getElementById('editName').value = name;
             document.getElementById('editAmount').value = amount;
-            document.getElementById('editDueDate').value = dueDate;
-            document.getElementById('editDescription').value = description;
+            document.getElementById('editRenewalDate').value = renewalDate;
             openEditModal();
         }
 
@@ -943,19 +970,16 @@
             const id = document.getElementById('editId').value;
             
             const formData = {
-                name: document.getElementById('editName').value,
-                amount: document.getElementById('editAmount').value,
-                dueDate: document.getElementById('editDueDate').value,
-                description: document.getElementById('editDescription').value
+                service_name: document.getElementById('editName').value,
+                amount: parseFloat(document.getElementById('editAmount').value),
+                renewal_date: document.getElementById('editRenewalDate').value,
+                frequency: document.getElementById('editFrequency').value
             };
 
             try {
-                const token = await getAuthToken();
-                const response = await fetch(`/.netlify/functions/subscriptions/${id}`, {
+                const response = await fetchWithAuth(`/.netlify/functions/subscriptions/${id}`, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'apikey': SUPABASE_KEY,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
@@ -964,35 +988,32 @@
                 if (response.ok) {
                     showMessage('Conta atualizada com sucesso!', 'success');
                     closeEditModal();
-                    loadSubscriptions();
+                    await loadSubscriptions();
                 } else {
                     showMessage('Erro ao atualizar conta', 'error');
                 }
             } catch (error) {
-                showMessage('Erro ao atualizar conta', 'error');
+                console.error('Erro ao atualizar conta:', error);
+                showMessage(error.message, 'error');
             }
         });
 
         async function deleteSubscription(id) {
             if (confirm('Tem certeza que deseja excluir esta conta?')) {
                 try {
-                    const token = await getAuthToken();
-                    const response = await fetch(`/.netlify/functions/subscriptions/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'apikey': SUPABASE_KEY
-                        }
+                    const response = await fetchWithAuth(`/.netlify/functions/subscriptions/${id}`, {
+                        method: 'DELETE'
                     });
 
                     if (response.ok) {
                         showMessage('Conta removida com sucesso!', 'success');
-                        loadSubscriptions();
+                        await loadSubscriptions();
                     } else {
                         showMessage('Erro ao remover conta', 'error');
                     }
                 } catch (error) {
-                    showMessage('Erro ao remover conta', 'error');
+                    console.error('Erro ao remover conta:', error);
+                    showMessage(error.message, 'error');
                 }
             }
         }
