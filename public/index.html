@@ -6,43 +6,41 @@
     <title>ContaPlus</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
     <style>
         :root {
-            /* Tema claro (padrão) */
-            --primary-color: #007AFF;
-            --background-color: #F5F5F7;
-            --card-background: #FFFFFF;
-            --text-color: #1D1D1F;
-            --secondary-text: #86868B;
-            --border-color: #E5E5E5;
-            --border-radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --primary-color: #4CAF50;
+            --primary-hover: #45a049;
+            --danger-color: #ff4444;
+            --danger-hover: #cc0000;
+            --background-color: #ffffff;
+            --surface-color: #f5f5f5;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --border-color: #dddddd;
+            --shadow-color: rgba(0, 0, 0, 0.1);
         }
 
-        /* Tema escuro */
         [data-theme="dark"] {
-            --primary-color: #0A84FF;
-            --background-color: #000000;
-            --card-background: #1C1C1E;
-            --text-color: #FFFFFF;
-            --secondary-text: #98989D;
-            --border-color: #38383A;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s;
+            --primary-color: #66bb6a;
+            --primary-hover: #4caf50;
+            --danger-color: #ff4444;
+            --danger-hover: #cc0000;
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --text-color: #ffffff;
+            --text-secondary: #aaaaaa;
+            --border-color: #333333;
+            --shadow-color: rgba(0, 0, 0, 0.3);
         }
 
         body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
-            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
@@ -56,94 +54,12 @@
             align-items: center;
             gap: 1rem;
             margin-bottom: 2rem;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), #5856D6);
-            border-radius: var(--border-radius);
-            color: white;
-            box-shadow: var(--shadow);
-        }
-
-        .app-title i {
-            width: 32px;
-            height: 32px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
         }
 
         .app-title h1 {
-            font-size: 1.75rem;
             margin: 0;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .auth-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .auth-form {
-            background: var(--card-background);
-            padding: 2rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--secondary-text);
-            font-weight: 500;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            font-family: inherit;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-            background-color: var(--card-background);
-            color: var(--text-color);
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: var(--border-radius);
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        #logoutButton {
-            background-color: #FF3B30;
+            font-size: 2rem;
+            color: var(--primary-color);
         }
 
         .header {
@@ -151,177 +67,161 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
-            padding: 1rem;
-            background: var(--card-background);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .header h2 {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--text-color);
-        }
-
-        .header h2 i {
-            color: var(--primary-color);
         }
 
         .header-actions {
             display: flex;
             gap: 1rem;
-            align-items: center;
         }
 
-        .theme-toggle {
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            cursor: pointer;
+        .auth-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .auth-form {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
             color: var(--text-color);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        button {
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
-            transition: background-color 0.2s;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
 
-        .theme-toggle:hover {
-            background-color: var(--border-color);
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            background: none;
+            color: var(--text-color);
+        }
+
+        .btn-icon:hover {
+            background-color: var(--surface-color);
+        }
+
+        .btn-link {
+            background: none;
+            color: var(--text-color);
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .btn-link:hover {
+            background: none;
+            opacity: 0.8;
+        }
+
+        .inline-icon {
+            width: 1.2em;
+            height: 1.2em;
+            vertical-align: middle;
         }
 
         .alert {
             padding: 1rem;
-            margin: 1rem 0;
-            border-radius: var(--border-radius);
-            display: none;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            text-align: center;
         }
 
         .alert-success {
-            background-color: #E4FFF4;
-            color: #0A7B45;
-            border: 1px solid #34C759;
+            background-color: #d4edda;
+            color: #155724;
         }
 
         .alert-error {
-            background-color: #FFE5E5;
-            color: #C41E3A;
-            border: 1px solid #FF3B30;
+            background-color: #f8d7da;
+            color: #721c24;
         }
 
         .subscription-item {
-            background: var(--card-background);
-            padding: 1.5rem;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 1rem;
             margin-bottom: 1rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 2px 4px var(--shadow-color);
         }
 
-        .due-soon {
-            border-left: 4px solid #FF9500;
-        }
-
-        .due-badge {
-            display: inline-flex;
+        .subscription-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
-            background: rgba(255, 149, 0, 0.1);
-            color: #FF9500;
-            padding: 0.4rem 0.75rem;
-            border-radius: var(--border-radius);
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-left: 1rem;
-        }
-
-        .due-badge i {
-            width: 16px;
-            height: 16px;
+            margin-bottom: 1rem;
         }
 
         .subscription-title {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .subscription-title i {
-            width: 20px;
-            height: 20px;
-            color: var(--primary-color);
+            gap: 0.5rem;
         }
 
         .subscription-title h3 {
             margin: 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-color);
+            font-size: 1.2rem;
         }
 
-        .due-date {
+        .subscription-info {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .due-badge {
             display: flex;
             align-items: center;
             gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background-color: #fff3cd;
+            color: #856404;
+            border-radius: 4px;
+            font-size: 0.875rem;
         }
 
-        .due-date.soon {
-            color: #FF9500;
-            font-weight: 500;
-        }
-
-        .due-days {
-            font-size: 0.85rem;
-            color: #FF9500;
-            font-weight: 500;
-        }
-
-        .subscription-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-
-        .subscription-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-icon {
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            cursor: pointer;
-            color: var(--secondary-text);
-            transition: color 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-icon:hover {
-            color: var(--primary-color);
-        }
-
-        .btn-icon.delete:hover {
-            color: #FF3B30;
+        .due-soon {
+            color: #856404;
         }
 
         .modal {
@@ -331,128 +231,47 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
 
         .modal-content {
-            background: var(--card-background);
+            position: relative;
+            background-color: var(--surface-color);
+            margin: 10% auto;
             padding: 2rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            width: 90%;
             max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px var(--shadow-color);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
-        .modal-header h3 {
-            margin: 0;
-        }
-
-        .btn-close {
+        .close-button {
             background: none;
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
-            color: var(--secondary-text);
-        }
-
-        .subscription-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--secondary-text);
-        }
-
-        .main-content {
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .summary-card {
-            background: linear-gradient(135deg, var(--primary-color), #5856D6);
-            color: white;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            margin-top: 2rem;
-            box-shadow: var(--shadow);
-            position: sticky;
-            bottom: 1rem;
-            z-index: 10;
-        }
-
-        .summary-card h3 {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .summary-amount {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-top: 0.5rem;
-        }
-
-        .summary-details {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .modal-footer .credits {
-            color: var(--secondary-text);
-            font-size: 0.9rem;
+            color: var(--text-color);
         }
 
         .help-content {
             color: var(--text-color);
         }
 
-        .help-content h4 {
+        .help-content h3 {
             color: var(--primary-color);
-            margin: 1.5rem 0 0.5rem;
-            font-size: 1.1rem;
+            margin-top: 0;
         }
 
-        .help-content p {
-            margin: 0.5rem 0;
-            line-height: 1.5;
+        .help-content h4 {
+            color: var(--text-color);
+            margin: 1.5rem 0 0.5rem;
         }
 
         .help-content ul {
@@ -462,52 +281,92 @@
 
         .help-content li {
             margin: 0.25rem 0;
+            color: var(--text-secondary);
         }
 
-        .btn-help {
-            background: none;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 0.5rem 1rem;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
+        .modal-footer {
+            margin-top: 2rem;
+            text-align: right;
         }
 
-        .btn-help:hover {
-            background: var(--primary-color);
-            color: white;
+        .credits {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
         }
 
         .slogan {
             text-align: center;
-            margin: 2rem 0 1rem;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), #5856D6);
-            border-radius: var(--border-radius);
-            color: white;
+            color: var(--primary-color);
+            font-style: italic;
+            margin-top: 1rem;
             font-size: 1.1rem;
-            font-weight: 500;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
-        #resendButton {
-            margin-top: 1rem;
-            color: var(--text-color);
-            text-decoration: underline;
-            background: none;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            padding: 0.5rem;
-            transition: opacity 0.2s;
+        .summary-card {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px var(--shadow-color);
         }
-        
-        #resendButton:hover {
-            opacity: 0.8;
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .summary-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .summary-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .summary-details {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .content-section {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .content-section h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .subscription-info {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .modal-content {
+                margin: 5% 1rem;
+            }
         }
     </style>
 </head>
@@ -528,62 +387,71 @@
                             <label for="loginEmail">Email</label>
                             <input type="email" id="loginEmail" required>
                         </div>
+                        
                         <div class="form-group">
                             <label for="loginPassword">Senha</label>
                             <input type="password" id="loginPassword" required>
                         </div>
-                        <button type="submit">
-                            <i data-lucide="log-in" class="inline-icon"></i>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="log-in"></i>
                             Entrar
                         </button>
                     </form>
                     <button id="resendButton" class="btn btn-link">Reenviar email de confirmação</button>
+                    <p>Não tem uma conta? <a href="#" id="showRegister">Criar conta</a></p>
                 </div>
                 
-                <div class="auth-form">
-                    <h2>Registro</h2>
+                <div class="auth-form" style="display: none;">
+                    <h2>Criar Conta</h2>
                     <form id="registerForm">
                         <div class="form-group">
                             <label for="registerEmail">Email</label>
                             <input type="email" id="registerEmail" required>
                         </div>
+                        
                         <div class="form-group">
                             <label for="registerPassword">Senha</label>
-                            <input type="password" id="registerPassword" required>
+                            <input type="password" id="registerPassword" required minlength="6">
                         </div>
-                        <button type="submit">
-                            <i data-lucide="user-plus" class="inline-icon"></i>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="user-plus"></i>
                             Registrar
                         </button>
                     </form>
+                    <p>Já tem uma conta? <a href="#" id="showLogin">Fazer login</a></p>
                 </div>
             </div>
         </div>
 
-        <div id="mainContent" class="main-content" style="display: none;">
-            <div class="header">
-                <h2>
-                    <i data-lucide="clipboard-list" class="inline-icon"></i>
-                    Minhas Contas
-                </h2>
-                <div class="header-actions">
-                    <button id="helpButton" class="btn-help" onclick="openHelpModal()">
-                        <i data-lucide="help-circle" class="inline-icon"></i>
-                        Ajuda
-                    </button>
-                    <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">
-                        <i data-lucide="sun" class="theme-icon-light"></i>
-                        <i data-lucide="moon" class="theme-icon-dark" style="display: none;"></i>
-                    </button>
-                    <button id="logoutButton">
-                        <i data-lucide="log-out" class="inline-icon"></i>
-                        Sair
-                    </button>
+        <div id="mainContent" style="display: none;">
+            <div class="top-bar">
+                <button id="themeToggle" class="btn btn-icon">
+                    <i data-lucide="sun" class="theme-icon-light"></i>
+                    <i data-lucide="moon" class="theme-icon-dark" style="display: none;"></i>
+                </button>
+                <button id="logoutButton" class="btn btn-icon">
+                    <i data-lucide="log-out"></i>
+                </button>
+                <button id="helpButton" class="btn btn-icon" onclick="openHelpModal()">
+                    <i data-lucide="help-circle"></i>
+                </button>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-header">
+                    <h2>Resumo</h2>
+                    <span class="summary-amount">€0.00</span>
+                </div>
+                <div class="summary-details">
+                    <span id="subscriptionCount">0 contas</span>
+                    <span id="lastUpdate"></span>
                 </div>
             </div>
 
-            <div class="auth-form">
-                <h2>Nova Conta</h2>
+            <div class="content-section">
+                <h2>Nova Assinatura</h2>
                 <form id="subscriptionForm">
                     <div class="form-group">
                         <label for="serviceName">Nome do Serviço</label>
@@ -611,38 +479,28 @@
                     </div>
 
                     <button type="submit">
-                        <i data-lucide="plus-circle" class="inline-icon"></i>
-                        Adicionar Conta
+                        <i data-lucide="plus-circle"></i>
+                        Adicionar
                     </button>
                 </form>
             </div>
 
-            <div class="subscriptions">
+            <div class="content-section">
+                <h2>Minhas Assinaturas</h2>
                 <div id="subscriptionsList"></div>
-
-                <div id="summaryCard" class="summary-card">
-                    <h3>
-                        <i data-lucide="wallet" class="inline-icon"></i>
-                        Resumo Mensal
-                    </h3>
-                    <div class="summary-amount">€0.00</div>
-                    <div class="summary-details">
-                        <span id="subscriptionCount">0 contas</span>
-                        <span>Atualizado em <span id="lastUpdate">agora</span></span>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Adicionar modal de edição -->
+        <!-- Modal de Edição -->
         <div id="editModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Editar Conta</h3>
-                    <button class="btn-close" onclick="closeEditModal()">&times;</button>
+                    <h2>Editar Assinatura</h2>
+                    <button class="close-button" onclick="closeEditModal()">×</button>
                 </div>
                 <form id="editForm">
                     <input type="hidden" id="editId">
+                    
                     <div class="form-group">
                         <label for="editName">Nome do Serviço</label>
                         <input type="text" id="editName" required>
@@ -669,8 +527,8 @@
                     </div>
 
                     <button type="submit">
-                        <i data-lucide="save" class="inline-icon"></i>
-                        Salvar Alterações
+                        <i data-lucide="save"></i>
+                        Salvar
                     </button>
                 </form>
             </div>
@@ -680,12 +538,14 @@
         <div id="helpModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Como usar o ContaPlus</h3>
-                    <button class="btn-close" onclick="closeHelpModal()">&times;</button>
+                    <h2>Ajuda</h2>
+                    <button class="close-button" onclick="closeHelpModal()">×</button>
                 </div>
                 <div class="help-content">
-                    <h4>Adicionar uma Nova Conta</h4>
-                    <p>Use o formulário para adicionar uma nova conta com:</p>
+                    <h3>Como usar o ContaPlus</h3>
+
+                    <h4>Adicionar Nova Conta</h4>
+                    <p>Para adicionar uma nova conta ou assinatura, preencha os seguintes campos:</p>
                     <ul>
                         <li>Nome do serviço ou conta</li>
                         <li>Valor em euros</li>
@@ -694,32 +554,30 @@
                     </ul>
 
                     <h4>Gerenciar Contas</h4>
-                    <p>Para cada conta você pode:</p>
+                    <p>Você pode:</p>
                     <ul>
-                        <li>Editar os detalhes usando o botão de lápis</li>
-                        <li>Excluir a conta usando o botão de lixeira</li>
-                        <li>Ver alertas de vencimento próximo (5 dias)</li>
+                        <li>Editar uma conta existente clicando no ícone de lápis</li>
+                        <li>Excluir uma conta clicando no ícone de lixeira</li>
+                        <li>Ver o resumo total no topo da página</li>
                     </ul>
 
                     <h4>Recursos</h4>
                     <ul>
-                        <li>Tema claro/escuro (botão sol/lua)</li>
-                        <li>Resumo total das contas</li>
-                        <li>Alertas de vencimento</li>
-                        <li>Organização por data</li>
+                        <li>Tema claro/escuro: Clique no ícone de sol/lua no topo</li>
+                        <li>Alertas de vencimento: Contas próximas do vencimento serão destacadas</li>
+                        <li>Resumo automático: O total é calculado automaticamente</li>
                     </ul>
-
-                    <div class="slogan">
-                        "ContaPlus – O seu dinheiro sob controle!"
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <span class="credits">Desenvolvido por Patrício Brito 2025</span>
                     <button onclick="closeHelpModal()">Fechar</button>
                 </div>
+
+                <div class="slogan">
+                    "ContaPlus – O seu dinheiro sob controle!"
+                </div>
             </div>
         </div>
-
     </div>
 
     <script>
