@@ -493,6 +493,22 @@
             font-weight: 500;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
+
+        #resendButton {
+            margin-top: 1rem;
+            color: var(--text-color);
+            text-decoration: underline;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            padding: 0.5rem;
+            transition: opacity 0.2s;
+        }
+        
+        #resendButton:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -710,10 +726,43 @@
         // Inicializar Supabase
         const SUPABASE_URL = 'https://rlatlpcnpgcegvjeebxe.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                storage: window.localStorage
+            }
+        });
 
-        // Inicializar ícones Lucide
-        lucide.createIcons();
+        // Elementos da interface
+        const authContainer = document.getElementById('authForms');
+        const mainContent = document.getElementById('mainContent');
+        const registerForm = document.getElementById('registerForm');
+        const loginForm = document.getElementById('loginForm');
+
+        // Funções de navegação
+        function showAuthForms() {
+            authContainer.style.display = 'block';
+            mainContent.style.display = 'none';
+            showLoginForm(); // Mostrar login por padrão
+        }
+
+        function showMainContent() {
+            authContainer.style.display = 'none';
+            mainContent.style.display = 'block';
+        }
+
+        function showLoginForm() {
+            document.querySelector('.auth-form:first-child').style.display = 'block';
+            document.querySelector('.auth-form:last-child').style.display = 'none';
+            document.getElementById('resendButton').style.display = 'block';
+        }
+
+        function showRegisterForm() {
+            document.querySelector('.auth-form:first-child').style.display = 'none';
+            document.querySelector('.auth-form:last-child').style.display = 'block';
+            document.getElementById('resendButton').style.display = 'none';
+        }
 
         // Função para obter o token de autenticação
         async function getAuthToken() {
@@ -727,142 +776,8 @@
             }
         }
 
-        // Função para fazer requisições autenticadas
-        async function fetchWithAuth(url, options = {}) {
-            try {
-                const token = await getAuthToken();
-                if (!token) {
-                    throw new Error('Usuário não autenticado');
-                }
-
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        ...options.headers,
-                        'Authorization': `Bearer ${token}`,
-                        'apikey': SUPABASE_KEY
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Erro na requisição');
-                }
-
-                return response;
-            } catch (error) {
-                console.error('Erro na requisição:', error);
-                throw error;
-            }
-        }
-
-        // Carregar inscrições
-        async function loadSubscriptions() {
-            try {
-                const response = await fetchWithAuth('/.netlify/functions/subscriptions');
-                const subscriptions = await response.json();
-                const list = document.getElementById('subscriptionsList');
-                
-                if (!Array.isArray(subscriptions)) {
-                    throw new Error('Formato de resposta inválido');
-                }
-
-                list.innerHTML = subscriptions.map(sub => {
-                    const dueDate = new Date(sub.renewal_date);
-                    const today = new Date();
-                    const diffTime = dueDate.getTime() - today.getTime();
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const isDueSoon = diffDays <= 5 && diffDays > 0;
-                    
-                    return `
-                    <div class="subscription-item ${isDueSoon ? 'due-soon' : ''}">
-                        <div class="subscription-header">
-                            <div class="subscription-title">
-                                <i data-lucide="credit-card" class="inline-icon"></i>
-                                <h3>${sub.service_name}</h3>
-                                ${isDueSoon ? `
-                                    <div class="due-badge">
-                                        <i data-lucide="alert-circle"></i>
-                                        Vence em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}
-                                    </div>
-                                ` : ''}
-                            </div>
-                            <div class="subscription-actions">
-                                <button class="btn-icon" onclick="editSubscription('${sub.id}', '${sub.service_name}', '${sub.amount}', '${sub.renewal_date}')">
-                                    <i data-lucide="edit-2"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteSubscription('${sub.id}')">
-                                    <i data-lucide="trash-2"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="subscription-info">
-                            <div class="info-item">
-                                <i data-lucide="euro" class="inline-icon"></i>
-                                <span>${sub.amount}</span>
-                            </div>
-                            <div class="info-item">
-                                <div class="due-date ${isDueSoon ? 'soon' : ''}">
-                                    <i data-lucide="calendar" class="inline-icon"></i>
-                                    <span>${new Date(sub.renewal_date).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `}).join('');
-
-                updateSummary(subscriptions);
-                lucide.createIcons();
-            } catch (error) {
-                console.error('Erro ao carregar inscrições:', error);
-                showMessage(error.message, 'error');
-            }
-        }
-
-        // Atualizar cartão de resumo
-        function updateSummary(subscriptions) {
-            const total = subscriptions.reduce((sum, sub) => sum + parseFloat(sub.amount), 0);
-            const count = subscriptions.length;
-            
-            document.querySelector('.summary-amount').textContent = `€${total.toFixed(2)}`;
-            document.getElementById('subscriptionCount').textContent = `${count} ${count === 1 ? 'conta' : 'contas'}`;
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
-        }
-
-        // Verificar se o usuário está logado
-        async function checkAuth() {
-            try {
-                const token = await getAuthToken();
-                if (!token) {
-                    showAuthForms();
-                    return;
-                }
-
-                const response = await fetchWithAuth('/.netlify/functions/subscriptions');
-                if (response.ok) {
-                    showMainContent();
-                    await loadSubscriptions();
-                } else {
-                    showAuthForms();
-                }
-            } catch (error) {
-                console.error('Erro na verificação de autenticação:', error);
-                showAuthForms();
-            }
-        }
-
-        function showAuthForms() {
-            document.getElementById('authForms').style.display = 'block';
-            document.getElementById('mainContent').style.display = 'none';
-        }
-
-        function showMainContent() {
-            document.getElementById('authForms').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        }
-
         // Registro de usuário
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
@@ -899,24 +814,12 @@
         });
 
         // Login de usuário
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
             try {
-                // Primeiro, verificar se o email foi confirmado
-                const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-                
-                if (userError && !userError.message.includes('not authenticated')) {
-                    throw userError;
-                }
-
-                if (user?.email_confirmed_at === null) {
-                    showMessage('Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada.', 'error');
-                    return;
-                }
-
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email,
                     password
@@ -928,6 +831,11 @@
                     } else {
                         throw error;
                     }
+                    return;
+                }
+
+                if (!data.user.email_confirmed_at) {
+                    showMessage('Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada.', 'error');
                     return;
                 }
 
@@ -944,188 +852,16 @@
             }
         });
 
-        // Logout
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                const { error } = await supabaseClient.auth.signOut();
-                if (error) throw error;
-                
-                showAuthForms();
-                showMessage('Logout realizado com sucesso!', 'success');
-            } catch (error) {
-                console.error('Erro no logout:', error);
-                showMessage(error.message, 'error');
-            }
-        });
-
-        // Adicionar nova assinatura
-        document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
+        // Botões de navegação
+        document.getElementById('showRegister').addEventListener('click', (e) => {
             e.preventDefault();
-            const formData = {
-                service_name: document.getElementById('serviceName').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                renewal_date: document.getElementById('renewalDate').value,
-                frequency: document.getElementById('frequency').value
-            };
-
-            try {
-                const response = await fetchWithAuth('/.netlify/functions/subscriptions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-                showMessage('Assinatura adicionada com sucesso!', 'success');
-                e.target.reset();
-                await loadSubscriptions();
-            } catch (error) {
-                console.error('Erro ao adicionar assinatura:', error);
-                showMessage(error.message, 'error');
-            }
+            showRegisterForm();
         });
 
-        // Funções para editar e deletar contas
-        function openEditModal() {
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        async function editSubscription(id, name, amount, renewalDate) {
-            document.getElementById('editId').value = id;
-            document.getElementById('editName').value = name;
-            document.getElementById('editAmount').value = amount;
-            document.getElementById('editRenewalDate').value = renewalDate;
-            openEditModal();
-        }
-
-        document.getElementById('editForm').addEventListener('submit', async (e) => {
+        document.getElementById('showLogin').addEventListener('click', (e) => {
             e.preventDefault();
-            const id = document.getElementById('editId').value;
-            
-            const formData = {
-                service_name: document.getElementById('editName').value,
-                amount: parseFloat(document.getElementById('editAmount').value),
-                renewal_date: document.getElementById('editRenewalDate').value,
-                frequency: document.getElementById('editFrequency').value
-            };
-
-            try {
-                const response = await fetchWithAuth(`/.netlify/functions/subscriptions/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    showMessage('Conta atualizada com sucesso!', 'success');
-                    closeEditModal();
-                    await loadSubscriptions();
-                } else {
-                    showMessage('Erro ao atualizar conta', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao atualizar conta:', error);
-                showMessage(error.message, 'error');
-            }
+            showLoginForm();
         });
-
-        async function deleteSubscription(id) {
-            if (confirm('Tem certeza que deseja excluir esta conta?')) {
-                try {
-                    const response = await fetchWithAuth(`/.netlify/functions/subscriptions/${id}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        showMessage('Conta removida com sucesso!', 'success');
-                        await loadSubscriptions();
-                    } else {
-                        showMessage('Erro ao remover conta', 'error');
-                    }
-                } catch (error) {
-                    console.error('Erro ao remover conta:', error);
-                    showMessage(error.message, 'error');
-                }
-            }
-        }
-
-        // Gerenciamento de tema
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            
-            // Atualizar ícone
-            const lightIcon = document.querySelector('.theme-icon-light');
-            const darkIcon = document.querySelector('.theme-icon-dark');
-            
-            if (theme === 'dark') {
-                lightIcon.style.display = 'none';
-                darkIcon.style.display = 'block';
-            } else {
-                lightIcon.style.display = 'block';
-                darkIcon.style.display = 'none';
-            }
-        }
-
-        // Carregar tema salvo ou usar preferência do sistema
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                setTheme(savedTheme);
-            } else {
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                setTheme(prefersDark ? 'dark' : 'light');
-            }
-        }
-
-        // Alternar tema
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
-        });
-
-        // Inicializar tema ao carregar a página
-        initTheme();
-
-        // Verificar autenticação ao carregar a página
-        checkAuth();
-
-        // Funções do modal de ajuda
-        function openHelpModal() {
-            document.getElementById('helpModal').style.display = 'flex';
-        }
-
-        function closeHelpModal() {
-            document.getElementById('helpModal').style.display = 'none';
-        }
-
-        // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            const helpModal = document.getElementById('helpModal');
-            if (event.target === helpModal) {
-                closeHelpModal();
-            }
-        }
-
-        // Função para mostrar mensagens
-        function showMessage(message, type = 'success') {
-            const messageAlert = document.getElementById('messageAlert');
-            messageAlert.textContent = message;
-            messageAlert.className = `alert alert-${type}`;
-            messageAlert.style.display = 'block';
-            
-            setTimeout(() => {
-                messageAlert.style.display = 'none';
-            }, 5000);
-        }
 
         // Reenviar email de confirmação
         document.getElementById('resendButton').addEventListener('click', async () => {
@@ -1147,6 +883,12 @@
                 console.error('Erro ao reenviar email:', error);
                 showMessage(error.message, 'error');
             }
+        });
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            initTheme();
         });
     </script>
 </body>
