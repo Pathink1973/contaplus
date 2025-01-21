@@ -268,8 +268,7 @@
             padding: 1.5rem;
             margin-bottom: 1rem;
             box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
         .subscription-item:hover {
@@ -306,8 +305,9 @@
 
         .subscription-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
+            margin-top: 1rem;
             align-items: center;
         }
 
@@ -316,9 +316,8 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem;
-            background: var(--background-light);
             border-radius: var(--border-radius);
-            font-size: 0.95rem;
+            background: var(--background-light);
         }
 
         .info-item i {
@@ -372,13 +371,13 @@
 
         #subscriptionsList {
             display: grid;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 1.5rem;
+            margin: 1rem 0;
         }
 
         @media (min-width: 768px) {
             #subscriptionsList {
-                grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
