@@ -18,6 +18,9 @@
             --border-color: #E5E5E5;
             --border-radius: 12px;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --warning-color: #FF3B30;
+            --warning-background: #FFE5E5;
+            --warning-text: #C41E3A;
         }
 
         /* Tema escuro */
@@ -29,6 +32,9 @@
             --secondary-text: #98989D;
             --border-color: #38383A;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --warning-color: #FF3B30;
+            --warning-background: #3A1D1D;
+            --warning-text: #FFC080;
         }
 
         * {
@@ -522,6 +528,34 @@
                 margin: 5% 1rem;
             }
         }
+
+        .due-soon {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .due-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--warning-background);
+            color: var(--warning-text);
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .date.due-soon {
+            color: var(--warning-text);
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -904,11 +938,25 @@
                 subscriptionsList.innerHTML = '';
 
                 subscriptions.forEach(subscription => {
+                    const dueDate = new Date(subscription.renewal_date);
+                    const today = new Date();
+                    const diffTime = dueDate.getTime() - today.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const isDueSoon = diffDays <= 5 && diffDays > 0;
+
                     const card = document.createElement('div');
-                    card.className = 'subscription-card';
+                    card.className = `subscription-card ${isDueSoon ? 'due-soon' : ''}`;
                     card.innerHTML = `
                         <div class="card-header">
-                            <h3>${subscription.service_name}</h3>
+                            <div class="card-title">
+                                <h3>${subscription.service_name}</h3>
+                                ${isDueSoon ? `
+                                    <span class="due-badge">
+                                        <i data-lucide="alert-circle"></i>
+                                        Vence em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}
+                                    </span>
+                                ` : ''}
+                            </div>
                             <div class="card-actions">
                                 <button onclick="editSubscription('${subscription.id}')" class="btn-icon">
                                     <i data-lucide="edit-2"></i>
@@ -920,8 +968,14 @@
                         </div>
                         <div class="card-body">
                             <p class="amount">€${parseFloat(subscription.amount).toFixed(2)}</p>
-                            <p class="date"><i data-lucide="calendar"></i> ${new Date(subscription.renewal_date).toLocaleDateString()}</p>
-                            <p class="description"><i data-lucide="file-text"></i> ${subscription.description || 'Sem descrição'}</p>
+                            <p class="date ${isDueSoon ? 'due-soon' : ''}">
+                                <i data-lucide="calendar"></i> 
+                                ${new Date(subscription.renewal_date).toLocaleDateString()}
+                            </p>
+                            <p class="description">
+                                <i data-lucide="file-text"></i> 
+                                ${subscription.description || 'Sem descrição'}
+                            </p>
                         </div>
                     `;
                     subscriptionsList.appendChild(card);
