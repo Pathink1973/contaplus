@@ -264,16 +264,12 @@
 
         .subscription-item {
             background: var(--card-background);
-            border-radius: var(--border-radius);
             padding: 1.5rem;
             margin-bottom: 1rem;
+            border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            transition: all 0.2s;
-        }
-
-        .subscription-item:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
+            position: relative;
+            overflow: hidden;
         }
 
         .subscription-header {
@@ -281,8 +277,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
         }
 
         .subscription-title {
@@ -291,24 +285,14 @@
             gap: 0.75rem;
         }
 
-        .subscription-title h3 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .subscription-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
         .subscription-info {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
-            margin-top: 1rem;
-            align-items: center;
+            padding: 0.5rem;
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            margin-top: 0.5rem;
         }
 
         .info-item {
@@ -316,8 +300,6 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem;
-            border-radius: var(--border-radius);
-            background: var(--background-light);
         }
 
         .info-item i {
@@ -372,7 +354,6 @@
         #subscriptionsList {
             display: grid;
             gap: 1.5rem;
-            margin: 1rem 0;
         }
 
         @media (min-width: 768px) {
@@ -769,8 +750,14 @@
     <script>
         // Inicializar Supabase
         const SUPABASE_URL = 'https://rlatlpcnpgcegvjeebxe.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU3OTUzMTcsImV4cCI6MjAyMTM3MTMxN30.qDPJGGPDjvKpQBRbYJNKHLgGzPgXEBKuLzAONSbZIxc';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                storage: window.localStorage
+            }
+        });
 
         // Função para mostrar mensagens
         function showMessage(message, type = 'success') {
@@ -832,7 +819,10 @@
             try {
                 const { data, error } = await supabaseClient.auth.signUp({
                     email,
-                    password
+                    password,
+                    options: {
+                        emailRedirectTo: 'https://contasplus.netlify.app'
+                    }
                 });
 
                 if (error) throw error;
@@ -875,6 +865,40 @@
             } catch (error) {
                 console.error('Erro ao adicionar conta:', error);
                 showMessage('Erro ao adicionar conta: ' + error.message, 'error');
+            }
+        });
+
+        // Funções de autenticação
+        function showAuthForms() {
+            document.getElementById('authForms').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+        }
+
+        function showMainContent() {
+            document.getElementById('authForms').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        // Verificar sessão atual
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                showMainContent();
+                loadSubscriptions();
+            } else {
+                showAuthForms();
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) throw error;
+                showAuthForms();
+                showMessage('Logout realizado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                showMessage(error.message, 'error');
             }
         });
 
@@ -949,6 +973,16 @@
             }
         }
 
+        // Atualizar resumo
+        function updateSummary(subscriptions) {
+            const total = subscriptions.reduce((sum, sub) => sum + parseFloat(sub.amount), 0);
+            const count = subscriptions.length;
+            
+            document.querySelector('.summary-amount').textContent = `€${total.toFixed(2)}`;
+            document.getElementById('subscriptionCount').textContent = `${count} ${count === 1 ? 'conta' : 'contas'}`;
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
         // Funções para editar e deletar contas
         async function editSubscription(id) {
             try {
@@ -1021,16 +1055,6 @@
             }
         }
 
-        // Atualizar resumo
-        function updateSummary(subscriptions) {
-            const total = subscriptions.reduce((sum, sub) => sum + parseFloat(sub.amount), 0);
-            const count = subscriptions.length;
-            
-            document.querySelector('.summary-amount').textContent = `€${total.toFixed(2)}`;
-            document.getElementById('subscriptionCount').textContent = `${count} ${count === 1 ? 'conta' : 'contas'}`;
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
-        }
-
         // Funções do modal
         function closeEditModal() {
             document.getElementById('editModal').style.display = 'none';
@@ -1054,40 +1078,6 @@
                 closeHelpModal();
             }
         }
-
-        // Funções de autenticação
-        function showAuthForms() {
-            document.getElementById('authForms').style.display = 'block';
-            document.getElementById('mainContent').style.display = 'none';
-        }
-
-        function showMainContent() {
-            document.getElementById('authForms').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        }
-
-        // Logout
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                const { error } = await supabaseClient.auth.signOut();
-                if (error) throw error;
-                showAuthForms();
-                showMessage('Logout realizado com sucesso!');
-            } catch (error) {
-                console.error('Erro ao fazer logout:', error);
-                showMessage(error.message, 'error');
-            }
-        });
-
-        // Verificar sessão atual
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                showMainContent();
-                loadSubscriptions();
-            } else {
-                showAuthForms();
-            }
-        });
 
         // Gerenciamento de tema
         function setTheme(theme) {
