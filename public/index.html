@@ -604,7 +604,7 @@
                             Reenviar Email de Confirmação
                         </button>
                     </form>
-                    <p class="auth-switch">Não tem uma conta? <button onclick="showAuthForms()" class="link-button">Criar conta</button></p>
+                    <p class="auth-switch">Não tem uma conta? <button onclick="showRegisterForm()" class="link-button">Criar conta</button></p>
                 </div>
                 
                 <div class="auth-form" style="display: none;">
@@ -885,9 +885,24 @@
         });
 
         // Funções de autenticação
+        function showLoginForm() {
+            const loginForm = document.querySelector('.auth-form');
+            const registerForm = document.querySelector('.auth-form:nth-child(2)');
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            const loginForm = document.querySelector('.auth-form');
+            const registerForm = document.querySelector('.auth-form:nth-child(2)');
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+        }
+
         function showAuthForms() {
             document.getElementById('authForms').style.display = 'block';
             document.getElementById('mainContent').style.display = 'none';
+            showRegisterForm();
         }
 
         function showMainContent() {
