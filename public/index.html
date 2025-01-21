@@ -910,21 +910,22 @@
                         <div class="card-header">
                             <h3>${subscription.service_name}</h3>
                             <div class="card-actions">
-                                <button onclick="editSubscription(${subscription.id})" class="btn-icon">
-                                    <i class="fas fa-edit"></i>
+                                <button onclick="editSubscription('${subscription.id}')" class="btn-icon">
+                                    <i data-lucide="edit-2"></i>
                                 </button>
-                                <button onclick="deleteSubscription(${subscription.id})" class="btn-icon">
-                                    <i class="fas fa-trash"></i>
+                                <button onclick="deleteSubscription('${subscription.id}')" class="btn-icon delete">
+                                    <i data-lucide="trash-2"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="card-body">
                             <p class="amount">€${parseFloat(subscription.amount).toFixed(2)}</p>
-                            <p class="date"><i class="far fa-calendar"></i> ${new Date(subscription.renewal_date).toLocaleDateString()}</p>
-                            <p class="description"><i class="far fa-sticky-note"></i> ${subscription.description || 'Sem descrição'}</p>
+                            <p class="date"><i data-lucide="calendar"></i> ${new Date(subscription.renewal_date).toLocaleDateString()}</p>
+                            <p class="description"><i data-lucide="file-text"></i> ${subscription.description || 'Sem descrição'}</p>
                         </div>
                     `;
                     subscriptionsList.appendChild(card);
+                    lucide.createIcons();
                 });
 
                 updateSummary(subscriptions);
