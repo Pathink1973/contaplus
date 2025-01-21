@@ -826,6 +826,31 @@
             }
         });
 
+        // Configurar o botão de reenviar email
+        document.getElementById('resendButton').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            if (!email) {
+                showMessage('Por favor, insira seu email antes de solicitar o reenvio.', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.auth.resend({
+                    type: 'signup',
+                    email: email,
+                    options: {
+                        emailRedirectTo: 'https://contasplus.netlify.app'
+                    }
+                });
+
+                if (error) throw error;
+                showMessage('Email de confirmação reenviado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao reenviar email:', error);
+                showMessage(error.message, 'error');
+            }
+        });
+
         // Configurar o formulário de registro
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
