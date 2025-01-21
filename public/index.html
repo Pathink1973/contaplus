@@ -771,7 +771,7 @@
                     email,
                     password,
                     options: {
-                        emailRedirectTo: window.location.origin,
+                        emailRedirectTo: 'https://contasplus.netlify.app',
                         data: {
                             email_confirm_sent_at: new Date().toISOString()
                         }
@@ -841,7 +841,7 @@
                     type: 'signup',
                     email,
                     options: {
-                        emailRedirectTo: window.location.origin
+                        emailRedirectTo: 'https://contasplus.netlify.app'
                     }
                 });
 
