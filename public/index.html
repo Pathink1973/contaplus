@@ -262,103 +262,85 @@
             border: 1px solid #FF3B30;
         }
 
-        .subscription-item {
+        /* Grid de cartões */
+        #subscriptionsList {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        /* Estilo dos cartões */
+        .subscription-card {
             background: var(--card-background);
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            position: relative;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
             overflow: hidden;
         }
 
-        .subscription-header {
+        .subscription-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1rem;
+            background: var(--background-color);
+        }
+
+        .amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
             margin-bottom: 1rem;
         }
 
-        .subscription-title {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .subscription-info {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            padding: 0.5rem;
-            background: var(--background-light);
-            border-radius: var(--border-radius);
-            margin-top: 0.5rem;
-        }
-
-        .info-item {
+        .date, .description {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem;
+            color: var(--text-color);
+            margin: 0.5rem 0;
         }
 
-        .info-item i {
-            color: var(--primary-color);
-        }
-
-        .due-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            background: var(--warning-background);
-            color: var(--warning-text);
-            border-radius: 1rem;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .due-soon {
-            border-left: 4px solid var(--warning-color);
-        }
-
-        .due-date.soon {
-            color: var(--warning-text);
-            font-weight: 500;
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .btn-icon {
-            padding: 0.5rem;
-            border-radius: var(--border-radius);
-            border: 1px solid var(--border-color);
-            background: var(--background-light);
-            color: var(--text-color);
+            background: transparent;
+            border: none;
+            color: white;
             cursor: pointer;
-            transition: all 0.2s;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
         }
 
         .btn-icon:hover {
-            background: var(--background);
-            transform: translateY(-1px);
+            background: rgba(255,255,255,0.2);
         }
 
-        .btn-icon.delete {
-            color: var(--danger-color);
-            border-color: var(--danger-color);
-        }
-
-        .btn-icon.delete:hover {
-            background: var(--danger-background);
-        }
-
-        #subscriptionsList {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
+        /* Responsividade */
+        @media (max-width: 768px) {
             #subscriptionsList {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
             }
         }
 
@@ -905,71 +887,70 @@
         // Carregar inscrições
         async function loadSubscriptions() {
             try {
+                const user = await supabaseClient.auth.getUser();
+                if (!user.data?.user) {
+                    throw new Error('Usuário não autenticado');
+                }
+
                 const { data: subscriptions, error } = await supabaseClient
                     .from('subscriptions')
                     .select('*')
+                    .eq('user_id', user.data.user.id)
                     .order('renewal_date', { ascending: true });
 
                 if (error) throw error;
 
-                const list = document.getElementById('subscriptionsList');
-                
-                list.innerHTML = subscriptions.map(sub => {
-                    const dueDate = new Date(sub.renewal_date);
-                    const today = new Date();
-                    const diffTime = dueDate.getTime() - today.getTime();
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const isDueSoon = diffDays <= 5 && diffDays > 0;
-                    
-                    return `
-                    <div class="subscription-item ${isDueSoon ? 'due-soon' : ''}">
-                        <div class="subscription-header">
-                            <div class="subscription-title">
-                                <i data-lucide="credit-card" class="inline-icon"></i>
-                                <h3>${sub.service_name}</h3>
-                                ${isDueSoon ? `
-                                    <div class="due-badge">
-                                        <i data-lucide="alert-circle"></i>
-                                        Vence em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}
-                                    </div>
-                                ` : ''}
-                            </div>
-                            <div class="subscription-actions">
-                                <button class="btn-icon" onclick="editSubscription('${sub.id}')">
-                                    <i data-lucide="edit-2"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteSubscription('${sub.id}')">
-                                    <i data-lucide="trash-2"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="subscription-info">
-                            <div class="info-item">
-                                <i data-lucide="euro" class="inline-icon"></i>
-                                <span>${sub.amount}</span>
-                            </div>
-                            <div class="info-item">
-                                <div class="due-date ${isDueSoon ? 'soon' : ''}">
-                                    <i data-lucide="calendar" class="inline-icon"></i>
-                                    <span>${new Date(sub.renewal_date).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <i data-lucide="file-text" class="inline-icon"></i>
-                                <span>${sub.description || 'Sem descrição'}</span>
-                            </div>
-                        </div>
-                    </div>
-                `}).join('');
+                const subscriptionsList = document.getElementById('subscriptionsList');
+                subscriptionsList.innerHTML = '';
 
-                // Atualizar resumo
+                subscriptions.forEach(subscription => {
+                    const card = document.createElement('div');
+                    card.className = 'subscription-card';
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <h3>${subscription.service_name}</h3>
+                            <div class="card-actions">
+                                <button onclick="editSubscription(${subscription.id})" class="btn-icon">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteSubscription(${subscription.id})" class="btn-icon">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="amount">€${parseFloat(subscription.amount).toFixed(2)}</p>
+                            <p class="date"><i class="far fa-calendar"></i> ${new Date(subscription.renewal_date).toLocaleDateString()}</p>
+                            <p class="description"><i class="far fa-sticky-note"></i> ${subscription.description || 'Sem descrição'}</p>
+                        </div>
+                    `;
+                    subscriptionsList.appendChild(card);
+                });
+
                 updateSummary(subscriptions);
-                
-                // Recriar ícones após adicionar novo conteúdo
-                lucide.createIcons();
+                checkUpcomingPayments(subscriptions);
             } catch (error) {
-                console.error('Erro ao carregar inscrições:', error);
-                showMessage('Erro ao carregar suas contas: ' + error.message, 'error');
+                console.error('Erro ao carregar contas:', error);
+                showMessage('Erro ao carregar contas: ' + error.message, 'error');
+            }
+        }
+
+        // Verificar contas próximas do vencimento
+        function checkUpcomingPayments(subscriptions) {
+            const today = new Date();
+            const fiveDaysFromNow = new Date();
+            fiveDaysFromNow.setDate(today.getDate() + 5);
+
+            const upcomingPayments = subscriptions.filter(sub => {
+                const renewalDate = new Date(sub.renewal_date);
+                return renewalDate >= today && renewalDate <= fiveDaysFromNow;
+            });
+
+            if (upcomingPayments.length > 0) {
+                const message = upcomingPayments.map(sub => 
+                    `${sub.service_name} vence em ${new Date(sub.renewal_date).toLocaleDateString()}`
+                ).join('\n');
+                showMessage(`⚠️ Alertas de pagamento:\n${message}`, 'warning');
             }
         }
 
