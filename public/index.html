@@ -53,6 +53,7 @@
 
         .app-title {
             display: flex;
+            justify-content: space-between;
             align-items: center;
             gap: 1rem;
             margin-bottom: 2rem;
@@ -61,6 +62,12 @@
             border-radius: var(--border-radius);
             color: white;
             box-shadow: var(--shadow);
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .app-title i {
@@ -73,6 +80,32 @@
             font-size: 1.75rem;
             margin: 0;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-actions button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .header-actions button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #logoutButton {
+            background: rgba(255, 59, 48, 0.1);
+            border-color: rgba(255, 59, 48, 0.3);
+        }
+
+        #logoutButton:hover {
+            background: rgba(255, 59, 48, 0.2);
         }
 
         .auth-container {
@@ -133,10 +166,6 @@
 
         button:hover {
             opacity: 0.9;
-        }
-
-        #logoutButton {
-            background-color: #FF3B30;
         }
 
         .header {
@@ -482,13 +511,60 @@
                 margin: 5% 1rem;
             }
         }
+
+        .summary-card {
+            background: var(--card-background);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .summary-card h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .summary-amount {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .summary-details {
+            display: flex;
+            gap: 1rem;
+            color: var(--secondary-text);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="app-title">
-            <i data-lucide="bell-ring" class="inline-icon"></i>
-            <h1>ContaPlus</h1>
+            <div class="title-section">
+                <i data-lucide="bell-ring" class="inline-icon"></i>
+                <h1>ContaPlus</h1>
+            </div>
+            <div class="header-actions">
+                <button id="helpButton" class="btn-help" onclick="openHelpModal()">
+                    <i data-lucide="help-circle" class="inline-icon"></i>
+                    Ajuda
+                </button>
+                <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">
+                    <i data-lucide="sun" class="theme-icon-light"></i>
+                    <i data-lucide="moon" class="theme-icon-dark" style="display: none;"></i>
+                </button>
+                <button id="logoutButton">
+                    <i data-lucide="log-out" class="inline-icon"></i>
+                    Sair
+                </button>
+            </div>
         </div>
 
         <div id="authForms">
@@ -538,37 +614,13 @@
             </div>
         </div>
 
-        <div id="mainContent" style="display: none;">
-            <div class="top-bar">
-                <button id="themeToggle" class="btn btn-icon">
-                    <i data-lucide="sun" class="theme-icon-light"></i>
-                    <i data-lucide="moon" class="theme-icon-dark" style="display: none;"></i>
-                </button>
-                <button id="logoutButton" class="btn btn-icon">
-                    <i data-lucide="log-out"></i>
-                </button>
-                <button id="helpButton" class="btn btn-icon" onclick="openHelpModal()">
-                    <i data-lucide="help-circle"></i>
-                </button>
-            </div>
-
-            <div class="summary-card">
-                <div class="summary-header">
-                    <h2>Resumo</h2>
-                    <span class="summary-amount">€0.00</span>
-                </div>
-                <div class="summary-details">
-                    <span id="subscriptionCount">0 contas</span>
-                    <span id="lastUpdate"></span>
-                </div>
-            </div>
-
-            <div class="content-section">
-                <h2>Nova Assinatura</h2>
+        <div id="mainContent" class="main-content" style="display: none;">
+            <div class="auth-form">
+                <h2>Nova Conta</h2>
                 <form id="subscriptionForm">
                     <div class="form-group">
-                        <label for="serviceName">Nome do Serviço</label>
-                        <input type="text" id="serviceName" required>
+                        <label for="subscriptionName">Nome do Serviço</label>
+                        <input type="text" id="subscriptionName" required>
                     </div>
                     
                     <div class="form-group">
@@ -577,30 +629,38 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="renewalDate">Data de Vencimento</label>
-                        <input type="date" id="renewalDate" required>
+                        <label for="dueDate">Data de Vencimento</label>
+                        <input type="date" id="dueDate" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="frequency">Frequência</label>
-                        <select id="frequency" required>
-                            <option value="mensal">Mensal</option>
-                            <option value="trimestral">Trimestral</option>
-                            <option value="semestral">Semestral</option>
-                            <option value="anual">Anual</option>
-                        </select>
+                        <label for="description">Descrição (opcional)</label>
+                        <textarea id="description" rows="3"></textarea>
                     </div>
 
                     <button type="submit">
-                        <i data-lucide="plus-circle"></i>
-                        Adicionar
+                        <i data-lucide="plus-circle" class="inline-icon"></i>
+                        Adicionar Conta
                     </button>
                 </form>
             </div>
-
             <div class="content-section">
                 <h2>Minhas Assinaturas</h2>
-                <div id="subscriptionsList"></div>
+                <div class="subscriptions">
+                    <div id="subscriptionsList"></div>
+
+                    <div id="summaryCard" class="summary-card">
+                        <h3>
+                            <i data-lucide="wallet" class="inline-icon"></i>
+                            Resumo Mensal
+                        </h3>
+                        <div class="summary-amount">€0.00</div>
+                        <div class="summary-details">
+                            <span id="subscriptionCount">0 contas</span>
+                            <span>Atualizado em <span id="lastUpdate">agora</span></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -625,18 +685,13 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="editRenewalDate">Data de Vencimento</label>
-                        <input type="date" id="editRenewalDate" required>
+                        <label for="editDueDate">Data de Vencimento</label>
+                        <input type="date" id="editDueDate" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="editFrequency">Frequência</label>
-                        <select id="editFrequency" required>
-                            <option value="mensal">Mensal</option>
-                            <option value="trimestral">Trimestral</option>
-                            <option value="semestral">Semestral</option>
-                            <option value="anual">Anual</option>
-                        </select>
+                        <label for="editDescription">Descrição (opcional)</label>
+                        <textarea id="editDescription" rows="3"></textarea>
                     </div>
 
                     <button type="submit">
@@ -663,7 +718,7 @@
                         <li>Nome do serviço ou conta</li>
                         <li>Valor em euros</li>
                         <li>Data de vencimento</li>
-                        <li>Frequência (mensal, trimestral, semestral ou anual)</li>
+                        <li>Descrição (opcional)</li>
                     </ul>
 
                     <h4>Gerenciar Contas</h4>
@@ -1046,8 +1101,8 @@
             e.preventDefault();
             
             const formData = {
-                name: document.getElementById('serviceName').value,
-                dueDate: document.getElementById('renewalDate').value,
+                name: document.getElementById('subscriptionName').value,
+                dueDate: document.getElementById('dueDate').value,
                 amount: parseFloat(document.getElementById('amount').value),
                 description: document.getElementById('description').value,
                 user_id: (await supabaseClient.auth.getUser()).data.user.id
