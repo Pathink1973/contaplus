@@ -697,6 +697,18 @@
         // Inicializar ícones Lucide
         lucide.createIcons();
 
+        // Funções de navegação
+        function showAuthForms() {
+            document.getElementById('authForms').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            showLoginForm();
+        }
+
+        function showMainContent() {
+            document.getElementById('authForms').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
         // Função para mostrar mensagens
         function showMessage(message, type = 'success') {
             const messageAlert = document.getElementById('messageAlert');
@@ -713,52 +725,57 @@
         async function checkAuth() {
             try {
                 const { data: { session }, error } = await supabaseClient.auth.getSession();
-                if (error || !session) {
+                if (error) throw error;
+                
+                if (!session) {
                     showAuthForms();
                     return;
                 }
+
                 showMainContent();
-                await loadSubscriptions();
+                try {
+                    await loadSubscriptions();
+                } catch (error) {
+                    console.error('Erro ao carregar inscrições:', error);
+                    showMessage('Erro ao carregar suas contas. Por favor, recarregue a página.', 'error');
+                }
             } catch (error) {
                 console.error('Erro na verificação de autenticação:', error);
                 showAuthForms();
             }
         }
 
-        // Inicializar a aplicação
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            if (typeof initTheme === 'function') {
-                initTheme();
+        // Login de usuário
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+
+                showMessage('Login realizado com sucesso!', 'success');
+                showMainContent();
+                try {
+                    await loadSubscriptions();
+                } catch (loadError) {
+                    console.error('Erro ao carregar inscrições:', loadError);
+                    showMessage('Erro ao carregar suas contas. Por favor, recarregue a página.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                if (error.message.includes('Invalid login credentials')) {
+                    showMessage('Email ou senha incorretos', 'error');
+                } else {
+                    showMessage('Erro ao fazer login. Por favor, tente novamente.', 'error');
+                }
             }
         });
-
-        // Inicializar Supabase
-        const SUPABASE_URL = 'https://rlatlpcnpgcegvjeebxe.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                storage: window.localStorage
-            }
-        });
-
-        // Verificar parâmetros de URL para erros
-        function checkUrlErrors() {
-            const urlParams = new URLSearchParams(window.location.hash.substring(1));
-            const error = urlParams.get('error');
-
-            if (error === 'access_denied' && urlParams.get('error_code') === 'otp_expired') {
-                showMessage('O link de confirmação expirou. Por favor, solicite um novo email de confirmação.', 'error');
-                showLoginForm();
-                return true;
-            }
-            return false;
-        }
-
-        // Chamada inicial para verificar erros
-        checkUrlErrors();
 
         // Registro de usuário
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -798,29 +815,6 @@
             }
         });
 
-        // Login de usuário
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email,
-                    password
-                });
-
-                if (error) throw error;
-
-                showMessage('Login realizado com sucesso!', 'success');
-                showMainContent();
-                loadSubscriptions();
-            } catch (error) {
-                console.error('Erro no login:', error);
-                showMessage('Email ou senha incorretos', 'error');
-            }
-        });
-
         // Logout
         document.getElementById('logoutButton').addEventListener('click', async () => {
             try {
@@ -836,7 +830,14 @@
 
         // Reenviar email de confirmação
         async function resendConfirmationEmail(email) {
+            if (!email) {
+                showMessage('Por favor, insira seu email antes de solicitar o reenvio.', 'error');
+                return;
+            }
+
             try {
+                showMessage('Enviando email de confirmação...', 'success');
+                
                 const { error } = await supabaseClient.auth.resend({
                     type: 'signup',
                     email,
@@ -846,10 +847,26 @@
                 });
 
                 if (error) throw error;
-                showMessage('Um novo email de confirmação foi enviado. Por favor, verifique sua caixa de entrada.', 'success');
+
+                showMessage('Um novo email de confirmação foi enviado! Por favor, verifique sua caixa de entrada e spam.', 'success');
+                
+                // Desabilitar o botão temporariamente para evitar spam
+                const resendButton = document.getElementById('resendButton');
+                if (resendButton) {
+                    resendButton.disabled = true;
+                    setTimeout(() => {
+                        resendButton.disabled = false;
+                    }, 60000); // 1 minuto de espera
+                }
             } catch (error) {
                 console.error('Erro ao reenviar email:', error);
-                showMessage('Erro ao reenviar email de confirmação. Por favor, tente novamente.', 'error');
+                if (error.message.includes('already confirmed')) {
+                    showMessage('Este email já foi confirmado. Por favor, faça login.', 'error');
+                } else if (error.message.includes('too many requests')) {
+                    showMessage('Muitas tentativas. Por favor, aguarde alguns minutos antes de tentar novamente.', 'error');
+                } else {
+                    showMessage('Erro ao reenviar email. Por favor, verifique o email e tente novamente.', 'error');
+                }
             }
         }
 
@@ -858,10 +875,6 @@
         if (resendButton) {
             resendButton.addEventListener('click', async () => {
                 const email = document.getElementById('loginEmail').value;
-                if (!email) {
-                    showMessage('Digite seu email para reenviar a confirmação', 'error');
-                    return;
-                }
                 await resendConfirmationEmail(email);
             });
         }
@@ -876,6 +889,41 @@
             document.querySelector('.auth-form:first-child').style.display = 'none';
             document.querySelector('.auth-form:last-child').style.display = 'block';
         }
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            if (typeof initTheme === 'function') {
+                initTheme();
+            }
+        });
+
+        // Inicializar Supabase
+        const SUPABASE_URL = 'https://rlatlpcnpgcegvjeebxe.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                storage: window.localStorage
+            }
+        });
+
+        // Verificar parâmetros de URL para erros
+        function checkUrlErrors() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const error = urlParams.get('error');
+
+            if (error === 'access_denied' && urlParams.get('error_code') === 'otp_expired') {
+                showMessage('O link de confirmação expirou. Por favor, solicite um novo email de confirmação.', 'error');
+                showLoginForm();
+                return true;
+            }
+            return false;
+        }
+
+        // Chamada inicial para verificar erros
+        checkUrlErrors();
     </script>
 </body>
 </html>
