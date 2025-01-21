@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ContaPlus</title>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap">
     <style>
         :root {
@@ -264,79 +264,39 @@
 
         .subscription-item {
             background: var(--card-background);
+            border-radius: var(--border-radius);
             padding: 1.5rem;
             margin-bottom: 1rem;
-            border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
         }
 
-        .due-soon {
-            border-left: 4px solid #FF9500;
+        .subscription-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
         }
 
-        .due-badge {
-            display: inline-flex;
+        .subscription-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
-            background: rgba(255, 149, 0, 0.1);
-            color: #FF9500;
-            padding: 0.4rem 0.75rem;
-            border-radius: var(--border-radius);
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-left: 1rem;
-        }
-
-        .due-badge i {
-            width: 16px;
-            height: 16px;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .subscription-title {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .subscription-title i {
-            width: 20px;
-            height: 20px;
-            color: var(--primary-color);
+            gap: 0.75rem;
         }
 
         .subscription-title h3 {
             margin: 0;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .due-date {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .due-date.soon {
-            color: #FF9500;
-            font-weight: 500;
-        }
-
-        .due-days {
-            font-size: 0.85rem;
-            color: #FF9500;
-            font-weight: 500;
-        }
-
-        .subscription-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
+            color: var(--primary-color);
         }
 
         .subscription-actions {
@@ -344,24 +304,113 @@
             gap: 0.5rem;
         }
 
-        .btn-icon {
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            cursor: pointer;
-            color: var(--secondary-text);
-            transition: color 0.2s;
-            display: flex;
+        .subscription-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
             align-items: center;
-            justify-content: center;
         }
 
-        .btn-icon:hover {
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+        }
+
+        .info-item i {
             color: var(--primary-color);
         }
 
+        .due-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--warning-background);
+            color: var(--warning-text);
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .due-soon {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .due-date.soon {
+            color: var(--warning-text);
+            font-weight: 500;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            background: var(--background-light);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--background);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon.delete {
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
         .btn-icon.delete:hover {
-            color: #FF3B30;
+            background: var(--danger-background);
+        }
+
+        #subscriptionsList {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            #subscriptionsList {
+                grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            }
+        }
+
+        .summary-card {
+            background: var(--card-background);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .summary-card h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .summary-amount {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .summary-details {
+            display: flex;
+            gap: 1rem;
+            color: var(--secondary-text);
         }
 
         .modal {
@@ -510,37 +559,6 @@
             .modal-content {
                 margin: 5% 1rem;
             }
-        }
-
-        .summary-card {
-            background: var(--card-background);
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .summary-card h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .summary-amount {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .summary-details {
-            display: flex;
-            gap: 1rem;
-            color: var(--secondary-text);
         }
     </style>
 </head>
@@ -765,14 +783,14 @@
         }
 
         // Função para mostrar mensagens
-        function showMessage(message, type = 'success') {
-            const messageAlert = document.getElementById('messageAlert');
-            messageAlert.textContent = message;
-            messageAlert.className = `alert alert-${type}`;
-            messageAlert.style.display = 'block';
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
             
             setTimeout(() => {
-                messageAlert.style.display = 'none';
+                messageDiv.remove();
             }, 5000);
         }
 
@@ -955,64 +973,49 @@
 
         // Inicializar Supabase
         const SUPABASE_URL = 'https://rlatlpcnpgcegvjeebxe.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MTIyNDUsImV4cCI6MjA1Mjk4ODI0NX0.mYXDnQaPvcofb89D8bwbdsh6pwmQ5B4U5V4QPbd5dag';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                storage: window.localStorage
-            }
-        });
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXRscGNucGdjZWd2amVlYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU3OTUzMTcsImV4cCI6MjAyMTM3MTMxN30.qDPJGGPDjvKpQBRbYJNKHLgGzPgXEBKuLzAONSbZIxc';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Verificar parâmetros de URL para erros
-        function checkUrlErrors() {
-            const urlParams = new URLSearchParams(window.location.hash.substring(1));
-            const error = urlParams.get('error');
-
-            if (error === 'access_denied' && urlParams.get('error_code') === 'otp_expired') {
-                showMessage('O link de confirmação expirou. Por favor, solicite um novo email de confirmação.', 'error');
-                showLoginForm();
-                return true;
-            }
-            return false;
-        }
-
-        // Chamada inicial para verificar erros
-        checkUrlErrors();
-
-        // Gerenciamento de tema
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
+        // Configurar o formulário de inscrição
+        document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Atualizar ícone
-            const lightIcon = document.querySelector('.theme-icon-light');
-            const darkIcon = document.querySelector('.theme-icon-dark');
-            
-            if (theme === 'dark') {
-                lightIcon.style.display = 'none';
-                darkIcon.style.display = 'block';
-            } else {
-                lightIcon.style.display = 'block';
-                darkIcon.style.display = 'none';
-            }
-        }
+            try {
+                const user = await supabaseClient.auth.getUser();
+                if (!user.data?.user) {
+                    throw new Error('Usuário não autenticado');
+                }
 
-        // Carregar tema salvo ou usar preferência do sistema
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                setTheme(savedTheme);
-            } else {
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                setTheme(prefersDark ? 'dark' : 'light');
-            }
-        }
+                const formData = {
+                    service_name: document.getElementById('subscriptionName').value,
+                    renewal_date: document.getElementById('dueDate').value,
+                    amount: parseFloat(document.getElementById('amount').value),
+                    description: document.getElementById('description').value,
+                    frequency: 'monthly',
+                    user_id: user.data.user.id
+                };
 
-        // Alternar tema
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+                console.log('Enviando dados:', formData);
+
+                const { data, error } = await supabaseClient
+                    .from('subscriptions')
+                    .insert([formData])
+                    .select();
+
+                if (error) {
+                    console.error('Erro Supabase:', error);
+                    throw error;
+                }
+
+                console.log('Resposta:', data);
+                showMessage('Conta adicionada com sucesso!', 'success');
+                e.target.reset();
+                loadSubscriptions();
+            } catch (error) {
+                console.error('Erro detalhado:', error);
+                showMessage(`Erro ao adicionar conta: ${error.message || 'Erro desconhecido'}`, 'error');
+            }
         });
 
         // Carregar inscrições
@@ -1095,35 +1098,6 @@
             document.getElementById('subscriptionCount').textContent = `${count} ${count === 1 ? 'conta' : 'contas'}`;
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
         }
-
-        // Configurar o formulário de inscrição
-        document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                service_name: document.getElementById('subscriptionName').value,
-                renewal_date: document.getElementById('dueDate').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                description: document.getElementById('description').value,
-                frequency: 'monthly', // Definindo como mensal por padrão
-                user_id: (await supabaseClient.auth.getUser()).data.user.id
-            };
-
-            try {
-                const { error } = await supabaseClient
-                    .from('subscriptions')
-                    .insert([formData]);
-
-                if (error) throw error;
-
-                showMessage('Conta adicionada com sucesso!', 'success');
-                e.target.reset();
-                loadSubscriptions();
-            } catch (error) {
-                console.error('Erro ao adicionar conta:', error);
-                showMessage('Erro ao adicionar conta: ' + error.message, 'error');
-            }
-        });
 
         // Funções para editar e deletar contas
         async function editSubscription(id) {
@@ -1220,6 +1194,57 @@
                 closeHelpModal();
             }
         }
+
+        // Gerenciamento de tema
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            // Atualizar ícone
+            const lightIcon = document.querySelector('.theme-icon-light');
+            const darkIcon = document.querySelector('.theme-icon-dark');
+            
+            if (theme === 'dark') {
+                lightIcon.style.display = 'none';
+                darkIcon.style.display = 'block';
+            } else {
+                lightIcon.style.display = 'block';
+                darkIcon.style.display = 'none';
+            }
+        }
+
+        // Carregar tema salvo ou usar preferência do sistema
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                setTheme(prefersDark ? 'dark' : 'light');
+            }
+        }
+
+        // Alternar tema
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        // Verificar parâmetros de URL para erros
+        function checkUrlErrors() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const error = urlParams.get('error');
+
+            if (error === 'access_denied' && urlParams.get('error_code') === 'otp_expired') {
+                showMessage('O link de confirmação expirou. Por favor, solicite um novo email de confirmação.', 'error');
+                showLoginForm();
+                return true;
+            }
+            return false;
+        }
+
+        // Chamada inicial para verificar erros
+        checkUrlErrors();
     </script>
 </body>
 </html>
