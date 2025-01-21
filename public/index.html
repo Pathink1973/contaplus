@@ -1021,14 +1021,14 @@
                 const { data: subscriptions, error } = await supabaseClient
                     .from('subscriptions')
                     .select('*')
-                    .order('dueDate', { ascending: true });
+                    .order('renewal_date', { ascending: true });
 
                 if (error) throw error;
 
                 const list = document.getElementById('subscriptionsList');
                 
                 list.innerHTML = subscriptions.map(sub => {
-                    const dueDate = new Date(sub.dueDate);
+                    const dueDate = new Date(sub.renewal_date);
                     const today = new Date();
                     const diffTime = dueDate.getTime() - today.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -1039,7 +1039,7 @@
                         <div class="subscription-header">
                             <div class="subscription-title">
                                 <i data-lucide="credit-card" class="inline-icon"></i>
-                                <h3>${sub.name}</h3>
+                                <h3>${sub.service_name}</h3>
                                 ${isDueSoon ? `
                                     <div class="due-badge">
                                         <i data-lucide="alert-circle"></i>
@@ -1064,7 +1064,7 @@
                             <div class="info-item">
                                 <div class="due-date ${isDueSoon ? 'soon' : ''}">
                                     <i data-lucide="calendar" class="inline-icon"></i>
-                                    <span>${new Date(sub.dueDate).toLocaleDateString()}</span>
+                                    <span>${new Date(sub.renewal_date).toLocaleDateString()}</span>
                                 </div>
                             </div>
                             <div class="info-item">
@@ -1082,7 +1082,7 @@
                 lucide.createIcons();
             } catch (error) {
                 console.error('Erro ao carregar inscrições:', error);
-                showMessage('Erro ao carregar suas contas', 'error');
+                showMessage('Erro ao carregar suas contas: ' + error.message, 'error');
             }
         }
 
@@ -1101,10 +1101,11 @@
             e.preventDefault();
             
             const formData = {
-                name: document.getElementById('subscriptionName').value,
-                dueDate: document.getElementById('dueDate').value,
+                service_name: document.getElementById('subscriptionName').value,
+                renewal_date: document.getElementById('dueDate').value,
                 amount: parseFloat(document.getElementById('amount').value),
                 description: document.getElementById('description').value,
+                frequency: 'monthly', // Definindo como mensal por padrão
                 user_id: (await supabaseClient.auth.getUser()).data.user.id
             };
 
@@ -1120,7 +1121,7 @@
                 loadSubscriptions();
             } catch (error) {
                 console.error('Erro ao adicionar conta:', error);
-                showMessage('Erro ao adicionar conta', 'error');
+                showMessage('Erro ao adicionar conta: ' + error.message, 'error');
             }
         });
 
@@ -1136,15 +1137,15 @@
                 if (error) throw error;
 
                 document.getElementById('editId').value = id;
-                document.getElementById('editName').value = data.name;
+                document.getElementById('editName').value = data.service_name;
                 document.getElementById('editAmount').value = data.amount;
-                document.getElementById('editDueDate').value = data.dueDate;
+                document.getElementById('editDueDate').value = data.renewal_date;
                 document.getElementById('editDescription').value = data.description || '';
                 
                 document.getElementById('editModal').style.display = 'flex';
             } catch (error) {
                 console.error('Erro ao carregar dados para edição:', error);
-                showMessage('Erro ao carregar dados para edição', 'error');
+                showMessage('Erro ao carregar dados para edição: ' + error.message, 'error');
             }
         }
 
@@ -1153,10 +1154,11 @@
             const id = document.getElementById('editId').value;
             
             const formData = {
-                name: document.getElementById('editName').value,
+                service_name: document.getElementById('editName').value,
                 amount: parseFloat(document.getElementById('editAmount').value),
-                dueDate: document.getElementById('editDueDate').value,
-                description: document.getElementById('editDescription').value
+                renewal_date: document.getElementById('editDueDate').value,
+                description: document.getElementById('editDescription').value,
+                frequency: 'monthly' // Mantendo como mensal por padrão
             };
 
             try {
@@ -1172,7 +1174,7 @@
                 loadSubscriptions();
             } catch (error) {
                 console.error('Erro ao atualizar conta:', error);
-                showMessage('Erro ao atualizar conta', 'error');
+                showMessage('Erro ao atualizar conta: ' + error.message, 'error');
             }
         });
 
@@ -1190,7 +1192,7 @@
                     loadSubscriptions();
                 } catch (error) {
                     console.error('Erro ao remover conta:', error);
-                    showMessage('Erro ao remover conta', 'error');
+                    showMessage('Erro ao remover conta: ' + error.message, 'error');
                 }
             }
         }
