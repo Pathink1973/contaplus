@@ -239,7 +239,8 @@
         .theme-toggle {
             background: none;
             border: none;
-            padding: 0.5rem;
+            width: 40px;
+            height: 40px;
             cursor: pointer;
             color: var(--text-color);
             display: flex;
@@ -1155,7 +1156,6 @@
                         .eq('id', id);
 
                     if (error) throw error;
-
                     showMessage('Conta removida com sucesso!', 'success');
                     loadSubscriptions();
                 } catch (error) {
