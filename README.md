@@ -1,4 +1,4 @@
-# ContaPlus 💰
+# ContaPlus
 
 Uma aplicação web elegante para gerenciar e receber lembretes de contas a pagar, desenvolvida com Node.js e design inspirado na Apple.
 
